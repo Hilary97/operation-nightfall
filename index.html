@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Operation Nightfall — 1944</title>
+  <meta name="description" content="A WWII first-person shooter built with Three.js, HTML, CSS and JavaScript. Shot down over Normandy, you wake up lost in enemy territory.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;600;700&family=Special+Elite&display=swap" rel="stylesheet">
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22%3E%3Ctext y=%22.9em%22 font-size=%2290%22%3E%E2%9C%88%EF%B8%8F%3C/text%3E%3C/svg%3E">
+  <link rel="stylesheet" href="css/style.css">
+  <script type="importmap">
+    {
+      "imports": {
+        "three": "https://cdn.jsdelivr.net/npm/three@0.169.0/build/three.module.js",
+        "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.169.0/examples/jsm/"
+      }
+    }
+  </script>
+</head>
+<body>
+  <div id="app"></div>
+
+  <!-- In-game HUD -->
+  <div id="hud" class="hidden">
+    <div id="crosshair"><i></i><i></i><i></i><i></i></div>
+    <div id="hitmarker"></div>
+    <div id="damage-indicators"></div>
+    <div id="objective"><div class="obj-label">OBJECTIVE</div><div id="obj-text"></div></div>
+    <div id="compass" class="hidden"><canvas id="compass-canvas" width="360" height="34"></canvas><div id="compass-dist"></div></div>
+    <div id="enemy-count"></div>
+    <div id="health">
+      <div class="h-label">HEALTH <span id="health-num">100</span></div>
+      <div class="h-bar"><div id="health-fill"></div></div>
+    </div>
+    <div id="weapon">
+      <div id="weapon-name">M1911</div>
+      <div id="ammo"><span id="ammo-mag">7</span><span class="sep">/</span><span id="ammo-res">35</span></div>
+      <div id="grenades"></div>
+    </div>
+    <div id="killfeed"></div>
+    <div id="prompt"></div>
+    <div id="notice"></div>
+  </div>
+
+  <!-- Cinematic overlay -->
+  <div id="cine"><div class="bar top"></div><div class="bar bottom"></div><div id="caption"></div><div class="skip">ENTER / SPACE — skip</div></div>
+  <div id="subtitle"></div>
+  <div id="fade"></div>
+
+  <!-- Main menu -->
+  <div id="menu" class="screen hidden">
+    <div class="menu-inner">
+      <div class="stamp">TOP SECRET</div>
+      <div class="kicker">1944 · EUROPEAN THEATER</div>
+      <h1>OPERATION<br><span>NIGHTFALL</span></h1>
+      <p class="brief">Your C-47 is shot down on the way to the drop zone. You wake up alone, lost behind enemy lines — and the forest hides something the enemy would kill to protect.</p>
+      <button id="btn-start" class="btn">BEGIN MISSION</button>
+      <div class="opts">
+        <label>Graphics <select id="opt-quality"><option value="high">High</option><option value="medium">Medium</option><option value="low">Low</option></select></label>
+        <label>Difficulty <select id="opt-difficulty"><option value="0.7">Recruit</option><option value="1" selected>Regular</option><option value="1.3">Veteran</option></select></label>
+        <label>Mouse <input id="opt-sens" type="range" min="0.3" max="2.5" step="0.05" value="1"></label>
+      </div>
+      <div class="controls">
+        <div><b>WASD</b> move</div><div><b>Mouse</b> aim · <b>LMB</b> fire · <b>RMB</b> sights</div>
+        <div><b>Shift</b> sprint · <b>C</b> crouch · <b>Space</b> jump</div><div><b>R</b> reload · <b>1-3</b> weapons · <b>G</b> grenade</div>
+        <div><b>V</b> knife (silent) · <b>E</b> interact / drive</div><div><b>Esc</b> pause</div>
+      </div>
+    </div>
+  </div>
+
+  <div id="awaken" class="screen hidden"><div class="awaken-text">Click to open your eyes</div></div>
+
+  <div id="pause" class="screen hidden">
+    <div class="menu-inner small">
+      <h2>PAUSED</h2>
+      <button id="btn-resume" class="btn">RESUME</button>
+      <div class="opts"><label>Mouse <input id="opt-sens-pause" type="range" min="0.3" max="2.5" step="0.05" value="1"></label></div>
+    </div>
+  </div>
+
+  <div id="dead" class="screen hidden">
+    <div class="menu-inner small">
+      <h2 class="red">KILLED IN ACTION</h2>
+      <p class="brief">"The only easy day was yesterday."</p>
+      <button id="btn-retry" class="btn">RETRY FROM CHECKPOINT</button>
+    </div>
+  </div>
+
+  <div id="victory" class="screen hidden">
+    <div class="menu-inner">
+      <div class="stamp green">MISSION COMPLETE</div>
+      <h1>WELCOME<br><span>HOME, SOLDIER</span></h1>
+      <p class="brief">You made it back to Allied HQ with the rocket base intel. Command will take it from here.</p>
+      <div class="stats">
+        <div><span>TIME</span><b id="v-time"></b></div>
+        <div><span>KILLS</span><b id="v-kills"></b></div>
+        <div><span>ACCURACY</span><b id="v-acc"></b></div>
+        <div><span>HEADSHOTS</span><b id="v-head"></b></div>
+        <div><span>UNAWARE KILLS</span><b id="v-silent"></b></div>
+      </div>
+      <button id="btn-again" class="btn">PLAY AGAIN</button>
+    </div>
+  </div>
+
+  <div id="loading">
+    <div class="load-title">OPERATION NIGHTFALL</div>
+    <div class="load-track"><div id="load-bar"></div></div>
+    <div id="load-text">Loading…</div>
+  </div>
+
+  <script type="module" src="js/main.js"></script>
+</body>
+</html>
