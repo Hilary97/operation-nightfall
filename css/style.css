@@ -138,3 +138,69 @@ h2.red { color: var(--red); }
   .menu-inner { padding: 28px; }
   .controls { grid-template-columns: 1fr; }
 }
+
+/* ---------- Touch devices ---------- */
+.touch-only { display: none !important; }
+body.touch .touch-only { display: grid !important; }
+body.touch .desktop-only { display: none !important; }
+body.touch { touch-action: none; -webkit-touch-callout: none; -webkit-user-select: none; -webkit-tap-highlight-color: transparent; }
+
+#touch-ui { position: fixed; inset: 0; z-index: 2; touch-action: none; }
+.t-look-zone { position: absolute; top: 0; bottom: 0; left: 40%; right: 0; }
+.t-stick-zone { position: absolute; top: 25%; bottom: 0; left: 0; width: 40%; }
+.t-stick { position: fixed; width: 124px; height: 124px; margin: -62px 0 0 -62px; border-radius: 50%; border: 2px solid rgba(240, 230, 200, 0.35); background: radial-gradient(circle, rgba(0, 0, 0, 0.15), rgba(0, 0, 0, 0.35)); display: none; pointer-events: none; }
+.t-stick.on { display: block; }
+.t-knob { position: absolute; left: 37px; top: 37px; width: 50px; height: 50px; border-radius: 50%; background: rgba(240, 230, 200, 0.55); box-shadow: 0 0 10px rgba(0, 0, 0, 0.6); }
+
+.tbtn { position: absolute; display: flex; align-items: center; justify-content: center; width: 54px; height: 54px; border-radius: 50%; background: rgba(15, 15, 10, 0.45); border: 2px solid rgba(240, 230, 200, 0.4); color: #efe6cc; font-size: 11px; font-weight: 600; letter-spacing: 1px; text-shadow: var(--shadow); touch-action: none; }
+.tbtn.pressed { background: rgba(240, 230, 200, 0.35); transform: scale(0.94); }
+.tbtn.active { background: rgba(179, 38, 30, 0.6); border-color: #ff8a70; }
+.tbtn.dim { opacity: 0.25; }
+.t-fire { width: 88px; height: 88px; right: calc(28px + env(safe-area-inset-right)); bottom: 64px; font-size: 15px; background: rgba(150, 30, 20, 0.5); border-color: rgba(255, 140, 110, 0.6); }
+.t-aim { right: calc(132px + env(safe-area-inset-right)); bottom: 116px; }
+.t-reload { right: calc(124px + env(safe-area-inset-right)); bottom: 30px; font-size: 9px; }
+.t-jump { right: calc(40px + env(safe-area-inset-right)); bottom: 172px; }
+.t-crouch { right: calc(108px + env(safe-area-inset-right)); bottom: 196px; font-size: 9px; }
+.t-nade { right: calc(196px + env(safe-area-inset-right)); bottom: 36px; }
+.t-knife { right: calc(204px + env(safe-area-inset-right)); bottom: 108px; font-size: 10px; }
+.t-use { right: calc(186px + env(safe-area-inset-right)); bottom: 186px; width: 62px; height: 62px; background: rgba(60, 90, 40, 0.55); border-color: rgba(170, 220, 130, 0.6); }
+.t-pause { right: calc(14px + env(safe-area-inset-right)); top: 12px; width: 40px; height: 40px; font-size: 12px; }
+#touch-ui.veh .combat { display: none; }
+#touch-ui.veh .t-use { right: calc(40px + env(safe-area-inset-right)); bottom: 60px; }
+
+body.touch #objective { left: calc(14px + env(safe-area-inset-left)); top: 10px; max-width: 34vw; padding: 6px 10px 8px; }
+body.touch #obj-text { font-size: 13px; }
+body.touch #compass { top: 8px; transform: translateX(-50%) scale(0.8); }
+body.touch #enemy-count { right: calc(66px + env(safe-area-inset-right)); top: 14px; }
+body.touch #enemy-count span { font-size: 24px; }
+body.touch #weapon { right: calc(66px + env(safe-area-inset-right)); top: 54px; bottom: auto; pointer-events: auto; padding: 4px 8px; border: 1px dashed rgba(240, 230, 200, 0.3); }
+body.touch #weapon::after { content: 'TAP TO SWITCH'; display: block; font-size: 8px; letter-spacing: 2px; color: #b9b07f; }
+body.touch #ammo { font-size: 28px; }
+body.touch #ammo .sep, body.touch #ammo-res { font-size: 16px; }
+body.touch #killfeed { top: 150px; right: calc(66px + env(safe-area-inset-right)); font-size: 11px; }
+body.touch #health { left: 50%; bottom: 8px; width: 200px; transform: translateX(-50%); }
+body.touch #subtitle { bottom: 46px; max-width: 40vw; font-size: 12px; }
+body.touch #grenades small { display: none; }
+body.touch #prompt { top: 56%; font-size: 13px; }
+body.touch .n-title { font-size: 26px; }
+#cine .skip.tappable { pointer-events: auto; padding: 10px 14px; border: 1px solid #555; color: #aaa; }
+
+#rotate { display: none; position: fixed; inset: 0; z-index: 20; background: #070706; color: #d8cca8; flex-direction: column; align-items: center; justify-content: center; gap: 14px; font-family: 'Special Elite', monospace; font-size: 18px; text-align: center; padding: 30px; }
+.rotate-icon { font-size: 64px; animation: spin 2.4s ease-in-out infinite; }
+@keyframes spin { 50% { transform: rotate(90deg); } }
+@media (orientation: portrait) { body.touch #rotate { display: flex; } }
+
+@media (max-height: 500px) {
+  #menu { padding-left: 4vw; }
+  .menu-inner { padding: 18px 24px 16px; max-height: 94vh; overflow-y: auto; }
+  .menu-inner.small { min-width: 300px; }
+  h1 { font-size: 34px; margin: 4px 0 8px; }
+  h2 { font-size: 28px; }
+  .brief { font-size: 12px; margin-bottom: 12px; }
+  .btn { font-size: 16px; padding: 10px 24px; }
+  .opts { margin: 12px 0 10px; }
+  .controls { font-size: 11px; padding-top: 8px; }
+  .stamp { font-size: 11px; }
+  .stats b { font-size: 18px; }
+}
+body.touch #hud { z-index: 3; }

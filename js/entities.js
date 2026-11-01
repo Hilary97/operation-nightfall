@@ -243,8 +243,9 @@ export class Vehicle {
   update(dt) {
     const K = G.input.keys;
     if (this.occupied) {
-      const fwd = (K.has('KeyW') ? 1 : 0) - (K.has('KeyS') ? 1 : 0);
-      const st = (K.has('KeyA') ? 1 : 0) - (K.has('KeyD') ? 1 : 0);
+      const ax = G.input.axis;
+      const fwd = clamp((K.has('KeyW') ? 1 : 0) - (K.has('KeyS') ? 1 : 0) + ax.y, -1, 1);
+      const st = clamp((K.has('KeyA') ? 1 : 0) - (K.has('KeyD') ? 1 : 0) - ax.x, -1, 1);
       if (fwd > 0) this.speed += (this.speed < 0 ? 20 : 9) * dt;
       else if (fwd < 0) this.speed -= (this.speed > 0 ? 20 : 6) * dt;
       else this.speed *= 1 - 0.9 * dt;

@@ -283,16 +283,17 @@ export class Player {
     this.pitch = clamp(this.pitch - I.mouse.dy * sens, -1.45, 1.45);
 
     // Movement
-    const fwd = (K.has('KeyW') ? 1 : 0) - (K.has('KeyS') ? 1 : 0);
-    const str = (K.has('KeyD') ? 1 : 0) - (K.has('KeyA') ? 1 : 0);
+    const ax = I.axis;
+    const fwd = clamp((K.has('KeyW') ? 1 : 0) - (K.has('KeyS') ? 1 : 0) + ax.y, -1, 1);
+    const str = clamp((K.has('KeyD') ? 1 : 0) - (K.has('KeyA') ? 1 : 0) + ax.x, -1, 1);
     const wantCrouch = K.has('KeyC') || K.has('ControlLeft');
     this.crouch = lerp(this.crouch, wantCrouch ? 1 : 0, Math.min(1, dt * 10));
-    this.sprinting = K.has('ShiftLeft') && fwd > 0 && !this.crouching && this.ads < 0.3 && this.reloadT <= 0;
+    this.sprinting = (K.has('ShiftLeft') || ax.sprint) && fwd > 0 && !this.crouching && this.ads < 0.3 && this.reloadT <= 0;
     const speed = this.sprinting ? 7.6 : this.crouching ? 2.3 : this.ads > 0.5 ? 2.8 : 4.4;
     const sy = Math.sin(this.yaw), cy = Math.cos(this.yaw);
     let wx = -sy * fwd + cy * str, wz = -cy * fwd - sy * str;
     const wl = Math.hypot(wx, wz);
-    if (wl > 0) { wx /= wl; wz /= wl; }
+    if (wl > 1) { wx /= wl; wz /= wl; }
     const accel = this.onGround ? 11 : 2;
     this.vel.x = lerp(this.vel.x, wx * speed, Math.min(1, accel * dt));
     this.vel.z = lerp(this.vel.z, wz * speed, Math.min(1, accel * dt));

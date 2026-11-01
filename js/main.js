@@ -16,6 +16,7 @@ import { mission } from './mission.js';
 import { Player } from './player.js';
 import { HUD } from './hud.js';
 import { Intro } from './intro.js';
+import { initTouch, updateTouch, enterFullscreen } from './touch.js';
 
 const $ = (id) => document.getElementById(id);
 const loadBar = $('load-bar');
@@ -88,6 +89,7 @@ async function init() {
   addEventListener('resize', onResize);
   bindInput();
   bindUI();
+  if (G.touch) initTouch();
   setLoad(100, 'Ready');
   await nextFrame();
   $('loading').classList.add('hidden');
@@ -109,7 +111,8 @@ function onResize() {
 
 function applyQuality() {
   const q = G.settings.quality;
-  G.renderer.setPixelRatio(q === 'low' ? 0.75 : q === 'medium' ? 1 : Math.min(devicePixelRatio, 1.5));
+  const pr = G.touch ? { low: 1, medium: 1.25, high: 1.5 } : { low: 0.75, medium: 1, high: 1.5 };
+  G.renderer.setPixelRatio(Math.min(devicePixelRatio, pr[q]));
   G.bloom.enabled = q !== 'low';
   const size = q === 'high' ? 2048 : 1024;
   const sh = G.world.moon.shadow;
@@ -163,7 +166,9 @@ function lock() {
 
 // ---------------- UI ----------------
 function bindUI() {
+  $('opt-quality').value = G.settings.quality;
   $('btn-start').onclick = () => {
+    if (G.touch) enterFullscreen();
     G.settings.quality = $('opt-quality').value;
     G.settings.difficulty = parseFloat($('opt-difficulty').value);
     G.settings.sens = parseFloat($('opt-sens').value);
@@ -171,7 +176,11 @@ function bindUI() {
     G.audio.init();
     startIntro();
   };
-  $('btn-resume').onclick = () => { G.audio.init(); lock(); };
+  $('btn-resume').onclick = () => {
+    G.audio.init();
+    if (G.touch) { G.state = 'play'; G.hud.hideScreens(); return; }
+    lock();
+  };
   $('opt-sens-pause').oninput = (e) => { G.settings.sens = parseFloat(e.target.value); $('opt-sens').value = e.target.value; };
   $('btn-retry').onclick = () => {
     mission.respawn();
@@ -234,6 +243,7 @@ function loop(now) {
   last = now;
   G.time += dt;
   const t = G.time;
+  if (G.touch) updateTouch();
   const post = G.post.uniforms;
   post.uTime.value = t;
 

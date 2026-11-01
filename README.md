@@ -28,6 +28,24 @@ There are no image, model or audio files: every texture, model, animation and so
 | Drive | `W S` throttle, `A D` steer, `Space` brake |
 | Pause | `Esc` |
 
+### Phones and tablets
+
+The game detects touch screens and shows on-screen controls. Play in landscape (a reminder appears in portrait). Tapping **Begin Mission** goes fullscreen where the browser allows it. On iPhone, use *Share → Add to Home Screen* for a fullscreen experience.
+
+| Action | Touch |
+| --- | --- |
+| Move / sprint | Left thumb anywhere on the left side (floating joystick); push to the edge to sprint |
+| Look | Drag with the right thumb |
+| Fire | **FIRE**; drag it to keep aiming while you shoot |
+| Sights / crouch | **AIM** and **CROUCH** (toggles) |
+| Reload / jump / grenade / knife | **RELOAD**, **JUMP**, **NADE**, **KNIFE** |
+| Pick up, enter or exit vehicle | **USE** (lights up when something is in reach) |
+| Switch weapon | Tap the weapon panel (top right) |
+| Drive | Joystick: up/down throttle, left/right steer |
+| Pause | **❚❚** (also pauses when you leave the app) |
+
+Touch devices start on **Low** graphics (no grass, lighter shadows and resolution). You can raise it from the menu on powerful phones. Add `?touch` to the URL to force the touch controls on a desktop.
+
 Weapons: **M1911** pistol, **Thompson M1A1** (from the crash site crate) and a **Kar98k** rifle (at the foot of the north-west watchtower).
 
 ## Graphics and tech
@@ -58,6 +76,7 @@ js/textures.js    Canvas-painted textures
 js/fx.js          Particles, tracers, flash lights, film shader, searchlight beams
 js/audio.js       Web Audio synthesis
 js/collision.js   Spatial-hash grid, raycasts, line of sight
+js/touch.js       On-screen joystick and buttons for phones and tablets
 ```
 
 ## Run locally
@@ -83,4 +102,4 @@ vercel deploy --prod
 
 ## Requirements
 
-A desktop browser with WebGL 2 (Chrome, Edge, Firefox, Safari or Brave), plus a mouse and keyboard. If the frame rate drops, choose **Graphics: Medium or Low** in the menu.
+A browser with WebGL 2: desktop (Chrome, Edge, Firefox, Safari or Brave) with mouse and keyboard, or a recent phone or tablet with touch controls. If the frame rate drops, choose **Graphics: Medium or Low** in the menu.

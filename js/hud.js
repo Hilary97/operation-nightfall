@@ -67,6 +67,7 @@ export class HUD {
   prompt(t) {
     if (this._prompt === t) return;
     this._prompt = t;
+    if (t && G.touch) t = 'USE ▸ ' + t.replace(/^\[E\]\s*/, '').split('·')[0].trim();
     this.el.prompt.textContent = t || '';
     this.el.prompt.classList.toggle('on', !!t);
   }

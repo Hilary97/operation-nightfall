@@ -34,7 +34,7 @@ export const mission = {
   },
 
   onThompson() {
-    G.hud.notice('THOMPSON M1A1', 'Press 2 to equip');
+    G.hud.notice('THOMPSON M1A1', 'Fully automatic — equipped');
     setTimeout(() => G.hud.subtitle('No survivors... That smoke will draw patrols. I need to move — and find out where the hell I am.', 7), 2500);
   },
 
