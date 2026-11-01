@@ -3,7 +3,7 @@
 A World War II first-person shooter that runs in the browser, built with **HTML, CSS and JavaScript** on top of [Three.js](https://threejs.org/).
 There are no image, model or audio files: every texture, model, animation and sound is generated in code at runtime.
 
-**Play it:** https://operation-nightfall.vercel.app
+**Play it:** https://operation-nightfall-cyan.vercel.app
 
 ## The story
 
