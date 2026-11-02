@@ -60,6 +60,18 @@ function itemModel(type) {
       g.add(gun);
       break;
     }
+    case 'sniper': {
+      M.part(M.scaledBox(1.1, 0.6, 0.7, 1.2), new THREE.MeshStandardMaterial({ map: T.crate, roughness: 0.9 }), 0, 0.3, 0, g);
+      const gun = new THREE.Group();
+      M.part(M.boxG(0.05, 0.07, 1.1), wood, 0, 0, 0, gun);
+      M.part(M.cylZ(0.012, 0.4, 6), steel, 0, 0.03, -0.7, gun);
+      M.part(M.cylZ(0.014, 0.32, 10), steel, 0, 0.08, -0.05, gun);
+      M.part(M.cylZ(0.022, 0.09, 10), steel, 0, 0.08, -0.25, gun);
+      gun.position.set(0, 0.7, 0);
+      gun.rotation.set(0, -0.35, 0);
+      g.add(gun);
+      break;
+    }
     case 'rifle': {
       const gun = new THREE.Group();
       M.part(M.boxG(0.05, 0.08, 1.1), wood, 0, 0, 0, gun);
@@ -107,7 +119,11 @@ export function spawnItems() {
     label: 'Tomar la Thompson M1A1 de la caja de suministros',
     onTake: () => { P().giveWeapon(1, 90); G.mission.onThompson(); },
   });
-  addItem('rifle', -60.5, -45.5, { label: 'Tomar el fusil Kar98k con mira telescópica', onTake: () => P().giveWeapon(2, 20) });
+  addItem('sniper', WRECK.x + 9, WRECK.z - 9, {
+    label: 'Tomar el fusil de francotirador Springfield M1903A4',
+    onTake: () => { P().giveWeapon(3, 15); G.hud.notice('SPRINGFIELD M1903A4', 'Mira telescópica 8×–12× — rueda del ratón para cambiar el aumento'); },
+  });
+  addItem('rifle', -60.5, -45.5, { label: 'Tomar el fusil Kar98k', onTake: () => P().giveWeapon(2, 20) });
   for (const [x, z] of [[-34, 9], [12, -47], [52, 16], [-24, 40]]) {
     addItem('medkit', x, z, { auto: true, label: 'Botiquín', onTake: () => { P().heal(50); G.hud.killfeed('+50 de salud'); } });
   }

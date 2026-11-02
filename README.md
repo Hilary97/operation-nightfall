@@ -23,8 +23,9 @@ The game's interface, dialogue and subtitles are in Spanish.
 | --- | --- |
 | Move / sprint / crouch / jump | `W A S D` / `Shift` / `C` / `Space` |
 | Aim / fire / aim down sights | Mouse / left click / right click |
-| Hold breath (Kar98k scope only) | `Shift` while scoped |
-| Reload / switch weapon | `R` / `1` `2` `3` or mouse wheel |
+| Hold breath (scoped only) | `Shift` while scoped |
+| Change scope magnification (sniper, while scoped) | Mouse wheel |
+| Reload / switch weapon | `R` / `1` `2` `3` `4` or mouse wheel |
 | Grenade / knife (silent kill on unaware enemies) | `G` / `V` |
 | Interact, pick up, enter or exit vehicle | `E` |
 | Drive | `W S` throttle, `A D` steer, `Space` brake |
@@ -36,9 +37,10 @@ Each weapon has its own working sights, aligned with the exact bullet path:
 
 - **M1911:** rear notch and front post with three white dots; line up the dots.
 - **Thompson M1A1:** rear peep ring with a front blade; put the blade tip in the centre of the ring.
-- **Kar98k ZF39:** a 5x telescopic sight with the German three-post reticle. The rifle drifts while scoped (less when crouched, more when moving); hold `Shift` to steady it for a few seconds. Running out of breath makes the drift worse until you recover.
+- **Kar98k:** iron sights: a tangent rear V-notch and a hooded front post; sit the post tip in the notch.
+- **Springfield M1903A4 (sniper):** a long scope with a mil-dot reticle and two magnifications (8x and 12x). The mouse wheel switches between them while you are scoped; the current level is shown next to the lens. The rifle drifts noticeably while scoped (less when crouched, more when moving); hold `Shift` to steady it for a few seconds. Running out of breath makes the drift worse until you recover.
 
-Mouse sensitivity scales with the zoom, and aiming through the sights shrinks the bullet spread. Firing the rifle from the hip is inaccurate.
+Mouse sensitivity scales with the zoom, and aiming through the sights shrinks the bullet spread. Firing the rifles from the hip is inaccurate.
 
 ### Phones and tablets
 
@@ -52,13 +54,13 @@ The game detects touch screens and shows on-screen controls. Play in landscape (
 | Sights / crouch | **MIRA** and **AGACHAR** (toggles) |
 | Reload / jump / grenade / knife | **RECARGA**, **SALTO**, **GRANADA**, **CUCHILLO** |
 | Pick up, enter or exit vehicle | **USAR** (lights up when something is in reach) |
-| Switch weapon | Tap the weapon panel (top right) |
+| Switch weapon (or change sniper zoom while scoped) | Tap the weapon panel (top right) |
 | Drive | Joystick: up/down throttle, left/right steer |
 | Pause | **❚❚** (also pauses when you leave the app) |
 
 Touch devices start on **Low** (*Bajos*) graphics (no grass, lighter shadows and resolution). You can raise it from the menu on powerful phones. Add `?touch` to the URL to force the touch controls on a desktop.
 
-Weapons: **M1911** pistol, **Thompson M1A1** (from the crash site crate) and a **Kar98k** rifle (at the foot of the north-west watchtower).
+Weapons: **M1911** pistol, **Thompson M1A1** (from the crash site crate), a **Springfield M1903A4** sniper rifle (in the same supply crate area, a few metres from the Thompson) and a **Kar98k** rifle (at the foot of the north-west watchtower).
 
 ## Graphics and tech
 

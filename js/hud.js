@@ -10,7 +10,7 @@ export class HUD {
       feed: $('killfeed'), prompt: $('prompt'), sub: $('subtitle'), notice: $('notice'),
       count: $('enemy-count'), hit: $('hitmarker'), cross: $('crosshair'), compass: $('compass'),
       dmg: $('damage-indicators'), cine: $('cine'), caption: $('caption'), fade: $('fade'),
-      scope: $('scope'), vignette: $('ads-vignette'), breath: $('breath'), breathFill: $('breath-fill'),
+      scope: $('scope'), zoom: $('scope-zoom'), vignette: $('ads-vignette'), breath: $('breath'), breathFill: $('breath-fill'),
     };
     this.compassCanvas = $('compass-canvas');
     this.cctx = this.compassCanvas.getContext('2d');
@@ -126,7 +126,7 @@ export class HUD {
     this.el.mag.classList.toggle('empty', !P.inVehicle && w.mag === 0);
     this.el.nades.innerHTML = '●'.repeat(P.grenades) + '<small> GRANADAS [G]</small>';
     this.el.cross.classList.toggle('hidden', P.ads > 0.6 || !!P.inVehicle);
-    const spread = (P.moving ? 22 : 12) * (P.crouching ? 0.8 : 1) * (1 - P.ads) + (P.w.id === 'smg' ? 6 : P.w.id === 'rifle' ? 14 : 0);
+    const spread = (P.moving ? 22 : 12) * (P.crouching ? 0.8 : 1) * (1 - P.ads) + (P.w.id === 'smg' ? 6 : P.w.bolt ? 14 : 0);
     this.el.cross.style.setProperty('--gap', spread.toFixed(1) + 'px');
     this.updateSights(P);
     this.tick(dt);
@@ -140,6 +140,8 @@ export class HUD {
     this.el.hud.classList.toggle('scoped', sk > 0.5);
     if (sk <= 0.01) return;
     this.el.scope.style.opacity = sk.toFixed(3);
+    this.el.scope.dataset.reticle = P.w.reticle || 'post';
+    this.el.zoom.textContent = P.w.zooms ? P.w.zoomNames[P.zoomI] : '';
     // The lens shadow lags behind the sway and the steps, like an eye off the scope's axis
     const k = innerHeight * 4;
     const bob = P.onGround ? Math.min(1, P.hSpeed / 5) : 0;

@@ -7,10 +7,13 @@ import * as M from './models.js';
 import { clamp, lerp, rand, wrapAngle } from './util.js';
 
 // spread: hip-fire cone, adsSpread: cone through the sights, adsFov: camera FOV when fully aimed.
+// bolt: bolt action (cycling sound, heavier recoil). scope: aiming uses the scope overlay; zooms: FOV steps the wheel cycles;
+// sway: aim drift amplitude; reticle: which overlay reticle to show.
 const WDEF = [
   { id: 'pistol', name: 'M1911', magSize: 7, reserve: 35, maxReserve: 70, rate: 0.17, auto: false, dmg: 38, spread: 0.012, adsSpread: 0.0025, kick: 0.024, reload: 1.5, sound: 'pistol', noise: 45, range: 140, adsFov: 55 },
   { id: 'smg', name: 'Thompson M1A1', magSize: 30, reserve: 0, maxReserve: 240, rate: 0.088, auto: true, dmg: 25, spread: 0.03, adsSpread: 0.0055, kick: 0.013, reload: 2.3, sound: 'smg', noise: 65, range: 160, adsFov: 52 },
-  { id: 'rifle', name: 'Kar98k ZF39', magSize: 5, reserve: 0, maxReserve: 50, rate: 1.15, auto: false, dmg: 125, spread: 0.03, adsSpread: 0.0003, kick: 0.06, reload: 2.8, sound: 'kar', noise: 90, range: 320, adsFov: 15, scope: true },
+  { id: 'rifle', name: 'Kar98k', magSize: 5, reserve: 0, maxReserve: 50, rate: 1.15, auto: false, dmg: 125, spread: 0.03, adsSpread: 0.0012, kick: 0.06, reload: 2.8, sound: 'kar', noise: 90, range: 320, adsFov: 32, bolt: true },
+  { id: 'sniper', name: 'Springfield M1903A4', magSize: 5, reserve: 0, maxReserve: 30, rate: 1.4, auto: false, dmg: 180, spread: 0.05, adsSpread: 0.0001, kick: 0.08, reload: 3.2, sound: 'kar', noise: 100, range: 600, adsFov: 9.4, bolt: true, scope: true, zooms: [9.4, 6.25], zoomNames: ['8×', '12×'], sway: 0.009, reticle: 'mildot' },
 ];
 const HIP_FOV = 75;
 
@@ -31,7 +34,7 @@ class ViewModel {
     this.scene.add(this.flashLight);
     this.root = new THREE.Group();
     this.scene.add(this.root);
-    this.guns = [this.buildPistol(), this.buildThompson(), this.buildRifle()];
+    this.guns = [this.buildPistol(), this.buildThompson(), this.buildRifle(), this.buildSniper()];
     for (const g of this.guns) { g.visible = false; this.root.add(g); }
     this.flash = new THREE.Sprite(new THREE.SpriteMaterial({ map: G.T.flash, transparent: true, depthWrite: false, blending: THREE.AdditiveBlending }));
     this.flash.visible = false;
@@ -117,22 +120,49 @@ class ViewModel {
     M.part(M.cylZ(0.012, 0.75, 8), steel, 0, 0.025, -0.42, g, false);
     M.part(M.boxG(0.03, 0.035, 0.22), steel, 0, 0.03, 0.02, g, false);
     M.part(new THREE.SphereGeometry(0.015, 8, 6), steel, 0.05, 0.03, 0.08, g, false);
-    M.part(M.boxG(0.004, 0.012, 0.004), steel, 0, 0.046, -0.78, g, false);
-    // ZF39 telescopic sight: tube, objective and ocular bells, mounts and lenses
-    const SIGHT = 0.085;
-    const glass = M.mat('vmglass', { color: 0x1a2a3a, emissive: 0x2a4a70, emissiveIntensity: 0.35, roughness: 0.05, metalness: 0.6 });
-    M.part(M.cylZ(0.014, 0.22, 14), steel, 0, SIGHT, 0, g, false);
-    M.part(M.cylZ(0.021, 0.07, 16), steel, 0, SIGHT, -0.13, g, false);
-    M.part(M.cylZ(0.018, 0.05, 16), steel, 0, SIGHT, 0.13, g, false);
-    for (const z of [-0.06, 0.08]) {
-      M.part(M.boxG(0.012, 0.03, 0.012), steel, 0, 0.06, z, g, false);
-      M.part(new THREE.TorusGeometry(0.0155, 0.003, 6, 18), steel, 0, SIGHT, z, g, false);
+    // Tangent rear sight on the barrel: a V notch between two blades, notch floor just under the sight line
+    const SIGHT = 0.07;
+    const dot = this.sightDot();
+    M.part(M.boxG(0.012, SIGHT - 0.008 - 0.037, 0.012), steel, 0, (SIGHT - 0.008 + 0.037) / 2, -0.1, g, false);
+    for (const s of [-1, 1]) {
+      const blade = M.part(M.boxG(0.006, 0.014, 0.008), steel, s * 0.0075, SIGHT - 0.001, -0.1, g, false);
+      blade.rotation.z = -s * 0.28;
     }
-    M.part(M.cylZ(0.006, 0.02, 8), steel, 0, SIGHT + 0.018, 0.02, g, false).rotation.x = Math.PI / 2;
-    M.part(new THREE.CircleGeometry(0.019, 18), glass, 0, SIGHT, -0.1655, g, false).rotation.y = Math.PI;
-    M.part(new THREE.CircleGeometry(0.016, 18), glass, 0, SIGHT, 0.1556, g, false);
+    // Hooded front post (barleycorn): the post tip sits on the sight line inside a ring hood
+    M.part(M.boxG(0.014, 0.014, 0.02), steel, 0, 0.044, -0.78, g, false);
+    M.part(M.boxG(0.003, SIGHT - 0.05, 0.005), steel, 0, (SIGHT + 0.05) / 2, -0.78, g, false);
+    M.part(new THREE.TorusGeometry(0.012, 0.0018, 6, 20), steel, 0, SIGHT - 0.004, -0.78, g, false);
+    M.part(M.boxG(0.0022, 0.0022, 0.001), dot, 0, SIGHT - 0.0012, -0.7765, g, false);
     g.userData = { hip: new THREE.Vector3(0.15, -0.17, -0.42), ads: new THREE.Vector3(0, -SIGHT, -0.12), muzzle: new THREE.Vector3(0, 0.025, -0.8) };
     this.hands(g, [0, -0.06, 0.12], [0, -0.06, -0.3]);
+    return g;
+  }
+
+  buildSniper() {
+    const g = new THREE.Group();
+    const steel = M.mat('vmsteel', { color: 0x2a2d32, roughness: 0.35, metalness: 0.85 });
+    const wood = M.mat('vmwood', { color: 0x6a4024, roughness: 0.5 });
+    M.part(M.boxG(0.05, 0.07, 1.0), wood, 0, -0.02, -0.22, g, false);
+    M.part(M.boxG(0.045, 0.1, 0.28), wood, 0, -0.04, 0.42, g, false);
+    M.part(M.cylZ(0.0125, 0.95, 8), steel, 0, 0.025, -0.52, g, false);
+    M.part(M.boxG(0.032, 0.036, 0.24), steel, 0, 0.03, 0.02, g, false);
+    M.part(new THREE.SphereGeometry(0.015, 8, 6), steel, 0.05, 0.03, 0.09, g, false);
+    // Long scope on the axis y = SIGHT: tube, objective and ocular bells, two ring mounts, turrets and lenses
+    const SIGHT = 0.092;
+    const glass = M.mat('vmglass', { color: 0x1a2a3a, emissive: 0x2a4a70, emissiveIntensity: 0.35, roughness: 0.05, metalness: 0.6 });
+    M.part(M.cylZ(0.0135, 0.34, 14), steel, 0, SIGHT, -0.02, g, false);
+    M.part(M.cylZ(0.023, 0.1, 16), steel, 0, SIGHT, -0.24, g, false);
+    M.part(M.cylZ(0.019, 0.05, 16), steel, 0, SIGHT, 0.17, g, false);
+    for (const z of [-0.1, 0.08]) {
+      M.part(M.boxG(0.014, SIGHT - 0.0475 - 0.012, 0.02), steel, 0, (SIGHT - 0.012 + 0.0475) / 2, z, g, false);
+      M.part(new THREE.TorusGeometry(0.016, 0.003, 6, 18), steel, 0, SIGHT, z, g, false);
+    }
+    M.part(M.cylZ(0.006, 0.02, 8), steel, 0, SIGHT + 0.02, -0.02, g, false).rotation.x = Math.PI / 2;
+    M.part(M.cylZ(0.006, 0.02, 8), steel, 0.02, SIGHT, -0.02, g, false).rotation.z = Math.PI / 2;
+    M.part(new THREE.CircleGeometry(0.021, 18), glass, 0, SIGHT, -0.2906, g, false).rotation.y = Math.PI;
+    M.part(new THREE.CircleGeometry(0.017, 18), glass, 0, SIGHT, 0.1956, g, false);
+    g.userData = { hip: new THREE.Vector3(0.15, -0.17, -0.42), ads: new THREE.Vector3(0, -SIGHT, -0.14), muzzle: new THREE.Vector3(0, 0.025, -1.0) };
+    this.hands(g, [0, -0.06, 0.14], [0, -0.06, -0.38]);
     return g;
   }
 
@@ -183,8 +213,8 @@ class ViewModel {
     g.position.set(
       base.x + bx + this.sway.x * (1 - P.ads * 0.7) - this.sprintK * 0.05,
       base.y + by + this.sway.y * (1 - P.ads * 0.7) - reloadK * 0.12 - switchK * 0.3 - throwK * 0.25 - this.sprintK * 0.04,
-      base.z + this.kick * (P.w.id === 'rifle' ? 0.09 : 0.045));
-    g.rotation.set(this.kick * (P.w.id === 'rifle' ? 0.16 : 0.08) - reloadK * 0.7 + this.sprintK * -0.35, this.sprintK * 0.6, reloadK * 0.5 + this.sprintK * 0.25);
+      base.z + this.kick * (P.w.bolt ? 0.09 : 0.045));
+    g.rotation.set(this.kick * (P.w.bolt ? 0.16 : 0.08) - reloadK * 0.7 + this.sprintK * -0.35, this.sprintK * 0.6, reloadK * 0.5 + this.sprintK * 0.25);
     const mk = P.meleeT > 0 ? Math.sin((1 - P.meleeT / 0.45) * Math.PI) : 0;
     this.knife.visible = mk > 0.01;
     this.knife.position.set(0.18 - mk * 0.18, -0.2 + mk * 0.05, -0.4 - mk * 0.35);
@@ -206,6 +236,7 @@ export class Player {
     this.vm = new ViewModel();
     this.weapons = WDEF.map((d, i) => ({ ...d, owned: i === 0, mag: i === 0 ? d.magSize : 0, reserve: d.reserve }));
     this.cur = 0;
+    this.zoomI = 0;
     this.vm.show(0);
     this.grenades = 2;
     this.hasCompass = false;
@@ -260,6 +291,7 @@ export class Player {
   }
 
   get w() { return this.weapons[this.cur]; }
+  get adsFov() { return this.w.zooms ? this.w.zooms[this.zoomI] : this.w.adsFov; }
   get crouching() { return this.crouch > 0.5; }
   get moving() { return this.hSpeed > 1.5; }
 
@@ -393,7 +425,11 @@ export class Player {
     if (Pr.has('Digit2')) this.switchTo(1);
     if (Pr.has('Digit3')) this.switchTo(2);
     if (Pr.has('Digit4')) this.switchTo(3);
-    if (I.mouse.wheel) {
+    if (I.mouse.wheel && this.scopeK > 0.9 && this.w.zooms) {
+      // Looking through a variable scope: the wheel changes magnification instead of weapon
+      this.zoomI = (this.zoomI + (I.mouse.wheel > 0 ? 1 : this.w.zooms.length - 1)) % this.w.zooms.length;
+      G.audio.click();
+    } else if (I.mouse.wheel) {
       const owned = this.weapons.map((w, i) => (w.owned ? i : -1)).filter((i) => i >= 0);
       const k = owned.indexOf(this.cur);
       this.switchTo(owned[(k + (I.mouse.wheel > 0 ? 1 : owned.length - 1)) % owned.length]);
@@ -430,7 +466,7 @@ export class Player {
       this.pos.z - Math.sin(this.yaw) * Math.sin(this.bob) * 0.03 * bobAmt + rand(-1, 1) * s * 0.15);
     _e.set(this.pitch + this.kickPitch + this.aimSway.y, this.yaw + this.aimSway.x, this.roll + rand(-1, 1) * s * 0.03);
     cam.quaternion.setFromEuler(_e);
-    const fov = lerp(this.sprinting ? 80 : HIP_FOV, this.w.adsFov, this.ads);
+    const fov = lerp(this.sprinting ? 80 : HIP_FOV, this.adsFov, this.ads);
     if (Math.abs(cam.fov - fov) > 0.05) { cam.fov = lerp(cam.fov, fov, Math.min(1, dt * 14)); cam.updateProjectionMatrix(); }
     this.vm.update(dt, this);
   }
@@ -450,7 +486,7 @@ export class Player {
 
   // Slow figure-eight drift while aiming; it rotates the camera, so the shot follows it.
   updateAimSway(dt, t) {
-    let amp = (this.w.scope ? 0.0065 : 0.0016) * this.ads;
+    let amp = (this.w.sway ?? 0.0016) * this.ads;
     amp *= (this.crouching ? 0.5 : 1) * (this.moving ? 2.2 : 1) * (G.touch ? 0.5 : 1);
     amp *= this.holdingBreath ? 0.07 : this.breathOut ? 1.8 : 1;
     this.swayAmp = lerp(this.swayAmp, amp, Math.min(1, dt * 5));
@@ -603,7 +639,7 @@ export class Player {
     this.pitch = clamp(this.pitch + kick * 0.55, -1.45, 1.45);
     this.yaw += rand(-1, 1) * kick * 0.25;
     this.kickPitch += kick * 0.7;
-    if (w.id === 'rifle') setTimeout(() => G.audio.bolt(), 380);
+    if (w.bolt) setTimeout(() => G.audio.bolt(), 380);
     if (w.mag === 0 && w.reserve > 0) setTimeout(() => this.startReload(), 250);
   }
 

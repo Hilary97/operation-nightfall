@@ -31,10 +31,21 @@
     <div id="ads-vignette"></div>
     <div id="scope">
       <div class="scope-lens"></div>
-      <svg class="scope-reticle" viewBox="-100 -100 200 200" preserveAspectRatio="xMidYMid meet">
+      <svg class="scope-reticle ret-post" viewBox="-100 -100 200 200" preserveAspectRatio="xMidYMid meet">
         <path d="M-100 -1.7H-15V1.7H-100ZM15 -1.7H100V1.7H15ZM-2.8 100V7L0 0L2.8 7V100Z" />
         <path d="M-15 0H15" stroke-width="0.35" />
       </svg>
+      <svg class="scope-reticle ret-mildot" viewBox="-100 -100 200 200" preserveAspectRatio="xMidYMid meet">
+        <path d="M-100 -1.1H-24V1.1H-100ZM24 -1.1H100V1.1H24ZM-1.1 -100H1.1V-24H-1.1ZM-1.1 24H1.1V100H-1.1Z" stroke-width="0" />
+        <path d="M-24 0H24M0 -24V24" stroke-width="0.3" fill="none" />
+        <g stroke-width="0">
+          <circle cx="-6" cy="0" r="0.85" /><circle cx="-12" cy="0" r="0.85" /><circle cx="-18" cy="0" r="0.85" />
+          <circle cx="6" cy="0" r="0.85" /><circle cx="12" cy="0" r="0.85" /><circle cx="18" cy="0" r="0.85" />
+          <circle cx="0" cy="-6" r="0.85" /><circle cx="0" cy="-12" r="0.85" /><circle cx="0" cy="-18" r="0.85" />
+          <circle cx="0" cy="6" r="0.85" /><circle cx="0" cy="12" r="0.85" /><circle cx="0" cy="18" r="0.85" />
+        </g>
+      </svg>
+      <div id="scope-zoom"></div>
       <div id="breath"><div class="breath-label">SHIFT · CONTENER LA RESPIRACIÓN</div><div class="breath-bar"><i id="breath-fill"></i></div></div>
     </div>
     <div id="crosshair"><i></i><i></i><i></i><i></i></div>
@@ -77,8 +88,8 @@
       </div>
       <div class="controls desktop-only">
         <div><b>WASD</b> moverse</div><div><b>Ratón</b> mirar · <b>Clic izq.</b> disparar · <b>Clic der.</b> apuntar</div>
-        <div><b>Shift</b> correr · <b>C</b> agacharse · <b>Espacio</b> saltar</div><div><b>R</b> recargar · <b>1-3</b> armas · <b>G</b> granada</div>
-        <div><b>V</b> cuchillo (silencioso) · <b>E</b> interactuar / conducir</div><div><b>Shift</b> con mira telescópica: contener la respiración</div>
+        <div><b>Shift</b> correr · <b>C</b> agacharse · <b>Espacio</b> saltar</div><div><b>R</b> recargar · <b>1-4</b> armas · <b>G</b> granada</div>
+        <div><b>V</b> cuchillo (silencioso) · <b>E</b> interactuar / conducir</div><div><b>Shift</b> con mira telescópica: contener la respiración · <b>Rueda</b> con mira de francotirador: cambiar aumento</div>
         <div><b>Esc</b> pausa</div>
       </div>
       <div class="controls touch-only">

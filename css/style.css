@@ -214,6 +214,9 @@ body.touch #hud { z-index: 3; }
   box-shadow: 0 0 0 200vmax #000, inset 0 0 0 0.5vmin rgba(130, 170, 220, 0.18), inset 0 0 5vmin 2vmin rgba(0, 0, 0, 0.9); }
 .scope-reticle { position: absolute; left: 50%; top: 50%; width: 90vmin; height: 90vmin; transform: translate(-50%, -50%); fill: #0b0a08; stroke: #0b0a08; filter: drop-shadow(0 0 1.5px rgba(225, 215, 185, 0.55));
   clip-path: circle(44vmin at calc(50% + var(--sx)) calc(50% + var(--sy))); }
+#scope .scope-reticle { display: none; }
+#scope[data-reticle="post"] .ret-post, #scope[data-reticle="mildot"] .ret-mildot { display: block; }
+#scope-zoom { position: absolute; left: calc(50% + 26vmin); top: calc(50% + 31vmin); color: #d8cca8; font-size: 15px; font-weight: 700; letter-spacing: 2px; text-shadow: 0 0 4px #000; }
 #hud.scoped #prompt { opacity: 0; }
 #breath { position: absolute; left: 50%; bottom: 7vh; transform: translateX(-50%); text-align: center; opacity: 0.85; }
 .breath-label { font-size: 11px; letter-spacing: 3px; color: #cfc6a8; margin-bottom: 5px; }
