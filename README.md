@@ -50,7 +50,7 @@ The game detects touch screens and shows on-screen controls. Play in landscape (
 | --- | --- |
 | Move / sprint | Left thumb anywhere on the left side (floating joystick); push to the edge to sprint |
 | Look | Drag with the right thumb |
-| Fire | **FUEGO**; drag it to keep aiming while you shoot |
+| Fire | **FUEGO**; drag it to keep aiming while you shoot. While aiming (any weapon) it moves under the left thumb, so the right thumb stays free to look |
 | Sights / crouch | **MIRA** and **AGACHAR** (toggles) |
 | Reload / jump / grenade / knife | **RECARGA**, **SALTO**, **GRANADA**, **CUCHILLO** |
 | Pick up, enter or exit vehicle | **USAR** (lights up when something is in reach) |

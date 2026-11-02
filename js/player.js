@@ -436,7 +436,7 @@ export class Player {
     }
     if (Pr.has('KeyR')) this.startReload();
     const busy = this.switchT > 0 || this.reloadT > 0 || this.throwT > 0 || this.meleeT > 0 || this.sprinting;
-    if (!busy && this.fireCd <= 0 && (this.w.auto ? I.mouse.left : I.mouse.clicked)) this.fire();
+    if (!busy && this.fireCd <= 0 && (this.w.auto ? I.mouse.left || I.mouse.clicked : I.mouse.clicked)) this.fire();
     if (Pr.has('KeyG') && this.grenades > 0 && this.throwT <= 0) this.throwGrenade();
     if ((Pr.has('KeyV') || Pr.has('KeyF')) && this.meleeT <= 0) this.melee();
     if (Pr.has('KeyE')) this.interact();

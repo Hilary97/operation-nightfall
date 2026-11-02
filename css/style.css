@@ -231,3 +231,4 @@ body.touch #breath { display: none; }
 .t-zoom { right: calc(40px + env(safe-area-inset-right)); bottom: 172px; }
 #touch-ui.scoped .t-jump { display: none; }
 body.touch #hud.scoped #weapon::after { display: none; }
+#touch-ui.aiming .t-fire { right: auto; left: calc(28px + env(safe-area-inset-left)); bottom: 64px; }

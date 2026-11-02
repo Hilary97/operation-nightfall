@@ -172,6 +172,8 @@ export function updateTouch() {
   }
   if (!show) return;
   root.classList.toggle('veh', !!G.player.inVehicle);
+  // While aiming, FIRE moves under the left thumb so the right thumb is free to look
+  root.classList.toggle('aiming', G.input.mouse.right && !G.player.inVehicle);
   // The scope overlay is part of the HUD layer, which sits above these controls;
   // while scoped, lift the controls above it so FIRE and leaving the scope stay reachable.
   const scoped = G.player.scopeK > 0.5;
