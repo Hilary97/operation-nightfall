@@ -224,3 +224,10 @@ body.touch #hud { z-index: 3; }
 #breath-fill { display: block; height: 100%; width: 100%; background: #d8cca8; transition: background 0.3s; }
 #breath.out #breath-fill { background: #e0402a; }
 body.touch #breath { display: none; }
+
+/* Scoped on touch: controls go above the scope overlay */
+#touch-ui.scoped { z-index: 4; }
+#touch-ui.scoped .t-aim { background: rgba(179, 38, 30, 0.6); border-color: #ff8a70; }
+.t-zoom { right: calc(40px + env(safe-area-inset-right)); bottom: 172px; }
+#touch-ui.scoped .t-jump { display: none; }
+body.touch #hud.scoped #weapon::after { display: none; }

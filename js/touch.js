@@ -6,7 +6,8 @@ const LOOK_SENS = 1.3;
 const STICK_R = 62;
 const DEADZONE = 0.12;
 
-let root, stickBase, stickKnob, useBtn, aimBtn, crouchBtn;
+let root, stickBase, stickKnob, useBtn, aimBtn, crouchBtn, zoomBtn;
+let scopedUI = false;
 let visible = false;
 let stick = null;
 const looks = new Map();
@@ -143,6 +144,8 @@ export function initTouch() {
       b.classList.toggle('active', I.keys.has('KeyC'));
     },
   });
+  // Shown only behind a scope: steps the magnification (the player reads it as a wheel tick)
+  zoomBtn = button('t-zoom combat hidden', 'ZOOM', { down: () => { I.mouse.wheel += 1; } });
   button('t-nade combat', 'GRANADA', key('KeyG'));
   button('t-knife combat', 'CUCHILLO', key('KeyV'));
   useBtn = button('t-use', 'USAR', key('KeyE'));
@@ -169,6 +172,15 @@ export function updateTouch() {
   }
   if (!show) return;
   root.classList.toggle('veh', !!G.player.inVehicle);
+  // The scope overlay is part of the HUD layer, which sits above these controls;
+  // while scoped, lift the controls above it so FIRE and leaving the scope stay reachable.
+  const scoped = G.player.scopeK > 0.5;
+  if (scoped !== scopedUI) {
+    scopedUI = scoped;
+    root.classList.toggle('scoped', scoped);
+    aimBtn.textContent = scoped ? 'SALIR' : 'MIRA';
+  }
+  zoomBtn.classList.toggle('hidden', !(scoped && G.player.w.zooms));
   useBtn.classList.toggle('dim', !G.hud._prompt);
 }
 
