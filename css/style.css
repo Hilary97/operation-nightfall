@@ -161,8 +161,8 @@ body.touch { touch-action: none; -webkit-touch-callout: none; -webkit-user-selec
 .t-reload { right: calc(124px + env(safe-area-inset-right)); bottom: 30px; font-size: 9px; }
 .t-jump { right: calc(40px + env(safe-area-inset-right)); bottom: 172px; }
 .t-crouch { right: calc(108px + env(safe-area-inset-right)); bottom: 196px; font-size: 9px; }
-.t-nade { right: calc(196px + env(safe-area-inset-right)); bottom: 36px; }
-.t-knife { right: calc(204px + env(safe-area-inset-right)); bottom: 108px; font-size: 10px; }
+.t-nade { right: calc(196px + env(safe-area-inset-right)); bottom: 36px; font-size: 9px; }
+.t-knife { right: calc(204px + env(safe-area-inset-right)); bottom: 108px; font-size: 8px; letter-spacing: 0; }
 .t-use { right: calc(186px + env(safe-area-inset-right)); bottom: 186px; width: 62px; height: 62px; background: rgba(60, 90, 40, 0.55); border-color: rgba(170, 220, 130, 0.6); }
 .t-pause { right: calc(14px + env(safe-area-inset-right)); top: 12px; width: 40px; height: 40px; font-size: 12px; }
 #touch-ui.veh .combat { display: none; }
@@ -174,7 +174,7 @@ body.touch #compass { top: 8px; transform: translateX(-50%) scale(0.8); }
 body.touch #enemy-count { right: calc(66px + env(safe-area-inset-right)); top: 14px; }
 body.touch #enemy-count span { font-size: 24px; }
 body.touch #weapon { right: calc(66px + env(safe-area-inset-right)); top: 54px; bottom: auto; pointer-events: auto; padding: 4px 8px; border: 1px dashed rgba(240, 230, 200, 0.3); }
-body.touch #weapon::after { content: 'TAP TO SWITCH'; display: block; font-size: 8px; letter-spacing: 2px; color: #b9b07f; }
+body.touch #weapon::after { content: 'TOCA PARA CAMBIAR'; display: block; font-size: 8px; letter-spacing: 2px; color: #b9b07f; }
 body.touch #ammo { font-size: 28px; }
 body.touch #ammo .sep, body.touch #ammo-res { font-size: 16px; }
 body.touch #killfeed { top: 150px; right: calc(66px + env(safe-area-inset-right)); font-size: 11px; }
@@ -204,3 +204,20 @@ body.touch .n-title { font-size: 26px; }
   .stats b { font-size: 18px; }
 }
 body.touch #hud { z-index: 3; }
+
+/* ---------- Sights ---------- */
+#ads-vignette { position: absolute; inset: 0; opacity: 0; background: radial-gradient(ellipse at center, transparent 42%, rgba(0, 0, 0, 0.6) 100%); }
+#scope { position: absolute; inset: 0; opacity: 0; visibility: hidden; --sx: 0px; --sy: 0px; }
+#scope.on { visibility: visible; }
+.scope-lens { position: absolute; left: calc(50% + var(--sx)); top: calc(50% + var(--sy)); width: 90vmin; height: 90vmin; transform: translate(-50%, -50%); border-radius: 50%;
+  background: radial-gradient(circle, transparent 62%, rgba(10, 20, 30, 0.35) 88%, rgba(0, 0, 0, 0.9) 100%);
+  box-shadow: 0 0 0 200vmax #000, inset 0 0 0 0.5vmin rgba(130, 170, 220, 0.18), inset 0 0 5vmin 2vmin rgba(0, 0, 0, 0.9); }
+.scope-reticle { position: absolute; left: 50%; top: 50%; width: 90vmin; height: 90vmin; transform: translate(-50%, -50%); fill: #0b0a08; stroke: #0b0a08; filter: drop-shadow(0 0 1.5px rgba(225, 215, 185, 0.55));
+  clip-path: circle(44vmin at calc(50% + var(--sx)) calc(50% + var(--sy))); }
+#hud.scoped #prompt { opacity: 0; }
+#breath { position: absolute; left: 50%; bottom: 7vh; transform: translateX(-50%); text-align: center; opacity: 0.85; }
+.breath-label { font-size: 11px; letter-spacing: 3px; color: #cfc6a8; margin-bottom: 5px; }
+.breath-bar { width: 180px; height: 4px; margin: 0 auto; background: rgba(255, 255, 255, 0.15); }
+#breath-fill { display: block; height: 100%; width: 100%; background: #d8cca8; transition: background 0.3s; }
+#breath.out #breath-fill { background: #e0402a; }
+body.touch #breath { display: none; }

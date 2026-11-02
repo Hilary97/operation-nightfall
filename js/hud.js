@@ -10,6 +10,7 @@ export class HUD {
       feed: $('killfeed'), prompt: $('prompt'), sub: $('subtitle'), notice: $('notice'),
       count: $('enemy-count'), hit: $('hitmarker'), cross: $('crosshair'), compass: $('compass'),
       dmg: $('damage-indicators'), cine: $('cine'), caption: $('caption'), fade: $('fade'),
+      scope: $('scope'), vignette: $('ads-vignette'), breath: $('breath'), breathFill: $('breath-fill'),
     };
     this.compassCanvas = $('compass-canvas');
     this.cctx = this.compassCanvas.getContext('2d');
@@ -67,7 +68,7 @@ export class HUD {
   prompt(t) {
     if (this._prompt === t) return;
     this._prompt = t;
-    if (t && G.touch) t = 'USE ▸ ' + t.replace(/^\[E\]\s*/, '').split('·')[0].trim();
+    if (t && G.touch) t = 'USAR ▸ ' + t.replace(/^\[E\]\s*/, '').split('·')[0].trim();
     this.el.prompt.textContent = t || '';
     this.el.prompt.classList.toggle('on', !!t);
   }
@@ -123,12 +124,29 @@ export class HUD {
     this.el.res.textContent = P.inVehicle ? '' : w.reserve;
     document.getElementById('ammo').classList.toggle('hidden', !!P.inVehicle);
     this.el.mag.classList.toggle('empty', !P.inVehicle && w.mag === 0);
-    this.el.nades.innerHTML = '●'.repeat(P.grenades) + '<small> GRENADES [G]</small>';
+    this.el.nades.innerHTML = '●'.repeat(P.grenades) + '<small> GRANADAS [G]</small>';
     this.el.cross.classList.toggle('hidden', P.ads > 0.6 || !!P.inVehicle);
-    const spread = (P.moving ? 22 : 12) * (P.crouching ? 0.8 : 1) * (1 - P.ads) + (P.w.id === 'smg' ? 6 : 0);
+    const spread = (P.moving ? 22 : 12) * (P.crouching ? 0.8 : 1) * (1 - P.ads) + (P.w.id === 'smg' ? 6 : P.w.id === 'rifle' ? 14 : 0);
     this.el.cross.style.setProperty('--gap', spread.toFixed(1) + 'px');
+    this.updateSights(P);
     this.tick(dt);
     if (!this.el.compass.classList.contains('hidden')) this.drawCompass(P);
+  }
+
+  updateSights(P) {
+    const ads = P.inVehicle ? 0 : P.ads, sk = P.inVehicle ? 0 : P.scopeK;
+    this.el.vignette.style.opacity = (ads * (1 - sk) * 0.8).toFixed(3);
+    this.el.scope.classList.toggle('on', sk > 0.01);
+    this.el.hud.classList.toggle('scoped', sk > 0.5);
+    if (sk <= 0.01) return;
+    this.el.scope.style.opacity = sk.toFixed(3);
+    // The lens shadow lags behind the sway and the steps, like an eye off the scope's axis
+    const k = innerHeight * 4;
+    const bob = P.onGround ? Math.min(1, P.hSpeed / 5) : 0;
+    this.el.scope.style.setProperty('--sx', (-P.aimSway.x * k + Math.sin(P.bob) * 10 * bob).toFixed(1) + 'px');
+    this.el.scope.style.setProperty('--sy', (P.aimSway.y * k + Math.abs(Math.cos(P.bob)) * 8 * bob).toFixed(1) + 'px');
+    this.el.breathFill.style.width = (P.breath * 100).toFixed(1) + '%';
+    this.el.breath.classList.toggle('out', P.breathOut);
   }
 
   tick(dt) {
@@ -145,7 +163,7 @@ export class HUD {
     const pxPerDeg = W / 180;
     c.textAlign = 'center';
     c.textBaseline = 'middle';
-    const labels = { 0: 'N', 45: 'NE', 90: 'E', 135: 'SE', 180: 'S', 225: 'SW', 270: 'W', 315: 'NW' };
+    const labels = { 0: 'N', 45: 'NE', 90: 'E', 135: 'SE', 180: 'S', 225: 'SO', 270: 'O', 315: 'NO' };
     for (let d = Math.floor((heading - 90) / 5) * 5; d <= heading + 90; d += 5) {
       const x = W / 2 + (d - heading) * pxPerDeg;
       const dd = ((d % 360) + 360) % 360;

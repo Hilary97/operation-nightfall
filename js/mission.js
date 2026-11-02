@@ -29,13 +29,13 @@ export const mission = {
   endWake() {
     this.phase = 'explore';
     this.setCheckpoint();
-    G.hud.setObjective('Find out where you are');
-    G.hud.subtitle('The plane... it went down. Fire over there — maybe someone survived.', 6);
+    G.hud.setObjective('Averigua dónde estás');
+    G.hud.subtitle('El avión... se estrelló. Hay fuego allá — tal vez alguien sobrevivió.', 6);
   },
 
   onThompson() {
-    G.hud.notice('THOMPSON M1A1', 'Fully automatic — equipped');
-    setTimeout(() => G.hud.subtitle('No survivors... That smoke will draw patrols. I need to move — and find out where the hell I am.', 7), 2500);
+    G.hud.notice('THOMPSON M1A1', 'Totalmente automática — equipada');
+    setTimeout(() => G.hud.subtitle('No hay sobrevivientes... Ese humo atraerá patrullas. Tengo que moverme — y averiguar dónde demonios estoy.', 7), 2500);
   },
 
   update(dt) {
@@ -52,12 +52,12 @@ export const mission = {
       this.hintT += dt;
       if (!this.saw.sign && P.pos.distanceTo(G.world.signPos) < 9) {
         this.saw.sign = true;
-        G.hud.subtitle('"Achtung — Sperrgebiet"... A restricted military zone. Whatever they are hiding, it is close.', 7);
+        G.hud.subtitle('"Achtung — Sperrgebiet"... Una zona militar restringida. Sea lo que sea que esconden, está cerca.', 7);
       }
       if (baseDist(P.pos.x, P.pos.z) < 38) this.discoverBase();
       if (this.hintT > 120 && !this.saw.hint) {
         this.saw.hint = true;
-        G.hud.subtitle('Searchlights through the trees... There was a dirt trail leaving the crash site.', 7);
+        G.hud.subtitle('Reflectores entre los árboles... Había un camino de tierra que salía del lugar del accidente.', 7);
       }
     }
     if (this.phase === 'return' && Math.hypot(P.pos.x - ALLIED.x, P.pos.z - ALLIED.z) < 22) this.victory();
@@ -67,15 +67,15 @@ export const mission = {
     if (this.phase !== 'explore' && this.phase !== 'wake') return;
     this.phase = 'base';
     this.setCheckpoint();
-    G.hud.notice('ENEMY SECRET BASE DISCOVERED', 'Checkpoint reached');
-    G.hud.subtitle('A hidden rocket base... Nobody can know I am here. I have to take every one of them down.', 8);
+    G.hud.notice('BASE SECRETA ENEMIGA DESCUBIERTA', 'Punto de control alcanzado');
+    G.hud.subtitle('Una base de cohetes oculta... Nadie puede saber que estoy aquí. Tengo que acabar con todos ellos.', 8);
     this.updateObjective();
     G.hud.setEnemyCount(this.baseLeft());
     G.audio.startMusic();
   },
 
   updateObjective() {
-    if (this.phase === 'base') G.hud.setObjective(`Eliminate all enemy soldiers in the base — ${this.baseLeft()} remaining`);
+    if (this.phase === 'base') G.hud.setObjective(`Elimina a todos los soldados enemigos de la base — quedan ${this.baseLeft()}`);
   },
 
   onEnemyAlert(e) {
@@ -99,7 +99,7 @@ export const mission = {
     G.flags.alarm = true;
     G.flags.alarmTime = 40;
     G.audio.startSiren();
-    G.hud.notice('ALARM', 'The whole base is on alert');
+    G.hud.notice('ALARMA', 'Toda la base está en alerta');
     for (const o of G.enemies) {
       if (o.dead || o.group !== 'base' || o.state === 'combat') continue;
       o.setLast(new THREE.Vector3(G.player.pos.x + rand(-8, 8), 0, G.player.pos.z + rand(-8, 8)));
@@ -127,7 +127,7 @@ export const mission = {
     if (head) S.headshots++;
     const silent = e.state !== 'combat' && e.state !== 'search';
     if (silent) S.silent++;
-    G.hud.killfeed(head ? 'HEADSHOT' : silent ? 'Enemy eliminated (unaware)' : 'Enemy eliminated');
+    G.hud.killfeed(head ? 'TIRO A LA CABEZA' : silent ? 'Enemigo eliminado (desprevenido)' : 'Enemigo eliminado');
     dropLoot(e.pos);
     if (e.group === 'base') {
       if (this.phase === 'explore' || this.phase === 'wake') this.discoverBase();
@@ -142,9 +142,9 @@ export const mission = {
     this.phase = 'escape';
     G.audio.stopLoop('siren', 2);
     G.hud.setEnemyCount(null);
-    G.hud.notice('BASE CLEARED', 'Checkpoint reached');
-    G.hud.setObjective('Search the command bunker (east side) for intel');
-    G.hud.subtitle('That was the last of them. Their command bunker must have something Command can use.', 7);
+    G.hud.notice('BASE DESPEJADA', 'Punto de control alcanzado');
+    G.hud.setObjective('Registra el búnker de mando (lado este) en busca de información');
+    G.hud.subtitle('Ese era el último. Su búnker de mando debe tener algo que le sirva al Alto Mando.', 7);
     G.intel.hidden = false;
     G.intel.root.visible = true;
     G.hud.setMarker(G.intel.pos);
@@ -153,9 +153,9 @@ export const mission = {
 
   takeIntel() {
     this.phase = 'return';
-    G.hud.notice('INTEL SECURED', 'Rocket launch schedules and a map of the region');
-    G.hud.setObjective('Steal the Kübelwagen in the motor pool and return to Allied HQ');
-    G.hud.subtitle('A map... Allied HQ is south-east of here, down the road. They will fire green flares. Time to go home.', 8);
+    G.hud.notice('INFORMACIÓN ASEGURADA', 'Horarios de lanzamiento de cohetes y un mapa de la región');
+    G.hud.setObjective('Roba el Kübelwagen del parque de vehículos y regresa al cuartel general aliado');
+    G.hud.subtitle('Un mapa... El cuartel general aliado está al sureste, siguiendo el camino. Lanzarán bengalas verdes. Hora de volver a casa.', 8);
     G.player.hasCompass = true;
     G.hud.showCompass(true);
     G.hud.setMarker(ALLIED);

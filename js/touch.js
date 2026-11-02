@@ -127,35 +127,35 @@ export function initTouch() {
   stickZone.addEventListener('pointerup', endStick);
   stickZone.addEventListener('pointercancel', endStick);
 
-  button('t-fire combat', 'FIRE', {
+  button('t-fire combat', 'FUEGO', {
     look: true,
     down: () => { I.mouse.left = true; I.mouse.clicked = true; },
     up: () => { I.mouse.left = false; },
   });
-  aimBtn = button('t-aim combat', 'AIM', {
+  aimBtn = button('t-aim combat', 'MIRA', {
     down: (e, b) => { I.mouse.right = !I.mouse.right; b.classList.toggle('active', I.mouse.right); },
   });
-  button('t-reload combat', 'RELOAD', key('KeyR'));
-  button('t-jump combat', 'JUMP', key('Space'));
-  crouchBtn = button('t-crouch combat', 'CROUCH', {
+  button('t-reload combat', 'RECARGA', key('KeyR'));
+  button('t-jump combat', 'SALTO', key('Space'));
+  crouchBtn = button('t-crouch combat', 'AGACHAR', {
     down: (e, b) => {
       if (I.keys.has('KeyC')) I.keys.delete('KeyC'); else I.keys.add('KeyC');
       b.classList.toggle('active', I.keys.has('KeyC'));
     },
   });
-  button('t-nade combat', 'NADE', key('KeyG'));
-  button('t-knife combat', 'KNIFE', key('KeyV'));
-  useBtn = button('t-use', 'USE', key('KeyE'));
+  button('t-nade combat', 'GRANADA', key('KeyG'));
+  button('t-knife combat', 'CUCHILLO', key('KeyV'));
+  useBtn = button('t-use', 'USAR', key('KeyE'));
   button('t-pause', '❚❚', { down: pause });
 
   const weapon = document.getElementById('weapon');
   weapon.addEventListener('pointerdown', (e) => { e.preventDefault(); I.mouse.wheel += 1; });
 
   const skip = document.querySelector('#cine .skip');
-  skip.textContent = 'TAP HERE TO SKIP';
+  skip.textContent = 'TOCA AQUÍ PARA SALTAR';
   skip.classList.add('tappable');
   skip.addEventListener('pointerdown', (e) => { e.preventDefault(); if (G.state === 'intro') G.intro.skip(); });
-  document.querySelector('.awaken-text').textContent = 'Tap to open your eyes';
+  document.querySelector('.awaken-text').textContent = 'Toca para abrir los ojos';
 
   document.addEventListener('visibilitychange', () => { if (document.hidden) pause(); });
 }

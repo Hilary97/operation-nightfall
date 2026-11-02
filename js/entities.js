@@ -100,32 +100,32 @@ export function addItem(type, x, z, opts = {}) {
 export function spawnItems() {
   const P = () => G.player;
   addItem('compass', WAKE.x + 1.6, WAKE.z + 1.2, {
-    label: 'Pick up compass',
-    onTake: () => { P().hasCompass = true; G.hud.showCompass(true); G.hud.notice('COMPASS', 'At least now you know where north is'); },
+    label: 'Recoger la brújula',
+    onTake: () => { P().hasCompass = true; G.hud.showCompass(true); G.hud.notice('BRÚJULA', 'Al menos ahora sabes dónde está el norte'); },
   });
   addItem('thompson', WRECK.x + 6, WRECK.z - 9, {
-    label: 'Take Thompson M1A1 from the supply crate',
+    label: 'Tomar la Thompson M1A1 de la caja de suministros',
     onTake: () => { P().giveWeapon(1, 90); G.mission.onThompson(); },
   });
-  addItem('rifle', -60.5, -45.5, { label: 'Take Kar98k rifle', onTake: () => P().giveWeapon(2, 20) });
+  addItem('rifle', -60.5, -45.5, { label: 'Tomar el fusil Kar98k con mira telescópica', onTake: () => P().giveWeapon(2, 20) });
   for (const [x, z] of [[-34, 9], [12, -47], [52, 16], [-24, 40]]) {
-    addItem('medkit', x, z, { auto: true, label: 'Medkit', onTake: () => { P().heal(50); G.hud.killfeed('+50 health'); } });
+    addItem('medkit', x, z, { auto: true, label: 'Botiquín', onTake: () => { P().heal(50); G.hud.killfeed('+50 de salud'); } });
   }
   for (const [x, z] of [[-30, -3], [9, -33], [44, 40], [-50, 30], [WRECK.x - 4, WRECK.z + 5]]) {
-    addItem('ammo', x, z, { auto: true, label: 'Ammo', onTake: () => { P().addAmmo(0.5); G.hud.killfeed('Ammo picked up'); } });
+    addItem('ammo', x, z, { auto: true, label: 'Munición', onTake: () => { P().addAmmo(0.5); G.hud.killfeed('Munición recogida'); } });
   }
   for (const [x, z] of [[16, 47], [-50, -32], [WRECK.x + 2, WRECK.z + 8]]) {
-    addItem('grenades', x, z, { auto: true, label: 'Grenades', onTake: () => { P().grenades = Math.min(6, P().grenades + 2); G.hud.killfeed('+2 grenades'); } });
+    addItem('grenades', x, z, { auto: true, label: 'Granadas', onTake: () => { P().grenades = Math.min(6, P().grenades + 2); G.hud.killfeed('+2 granadas'); } });
   }
-  G.intel = addItem('intel', 33.6, -5.5, { y: 0.87, label: 'Take the secret documents', hidden: true, onTake: () => G.mission.takeIntel() });
+  G.intel = addItem('intel', 33.6, -5.5, { y: 0.87, label: 'Tomar los documentos secretos', hidden: true, onTake: () => G.mission.takeIntel() });
 }
 
 // Dropped by enemies
 export function dropLoot(pos) {
   const r = Math.random();
-  if (r < 0.55) addItem('ammo', pos.x + rand(-0.5, 0.5), pos.z + rand(-0.5, 0.5), { auto: true, onTake: () => { G.player.addAmmo(0.25); G.hud.killfeed('Ammo picked up'); } });
-  else if (r < 0.7) addItem('medkit', pos.x, pos.z, { auto: true, onTake: () => { G.player.heal(35); G.hud.killfeed('+35 health'); } });
-  else if (r < 0.8) addItem('grenades', pos.x, pos.z, { auto: true, onTake: () => { G.player.grenades = Math.min(6, G.player.grenades + 1); G.hud.killfeed('+1 grenade'); } });
+  if (r < 0.55) addItem('ammo', pos.x + rand(-0.5, 0.5), pos.z + rand(-0.5, 0.5), { auto: true, onTake: () => { G.player.addAmmo(0.25); G.hud.killfeed('Munición recogida'); } });
+  else if (r < 0.7) addItem('medkit', pos.x, pos.z, { auto: true, onTake: () => { G.player.heal(35); G.hud.killfeed('+35 de salud'); } });
+  else if (r < 0.8) addItem('grenades', pos.x, pos.z, { auto: true, onTake: () => { G.player.grenades = Math.min(6, G.player.grenades + 1); G.hud.killfeed('+1 granada'); } });
 }
 
 // ---------------- Explosive barrels ----------------

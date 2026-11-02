@@ -2,6 +2,7 @@
 
 A World War II first-person shooter that runs in the browser, built with **HTML, CSS and JavaScript** on top of [Three.js](https://threejs.org/).
 There are no image, model or audio files: every texture, model, animation and sound is generated in code at runtime.
+The game's interface, dialogue and subtitles are in Spanish.
 
 **Play it:** https://operation-nightfall-cyan.vercel.app
 
@@ -22,29 +23,40 @@ There are no image, model or audio files: every texture, model, animation and so
 | --- | --- |
 | Move / sprint / crouch / jump | `W A S D` / `Shift` / `C` / `Space` |
 | Aim / fire / aim down sights | Mouse / left click / right click |
+| Hold breath (Kar98k scope only) | `Shift` while scoped |
 | Reload / switch weapon | `R` / `1` `2` `3` or mouse wheel |
 | Grenade / knife (silent kill on unaware enemies) | `G` / `V` |
 | Interact, pick up, enter or exit vehicle | `E` |
 | Drive | `W S` throttle, `A D` steer, `Space` brake |
 | Pause | `Esc` |
 
+### Sights
+
+Each weapon has its own working sights, aligned with the exact bullet path:
+
+- **M1911:** rear notch and front post with three white dots; line up the dots.
+- **Thompson M1A1:** rear peep ring with a front blade; put the blade tip in the centre of the ring.
+- **Kar98k ZF39:** a 5x telescopic sight with the German three-post reticle. The rifle drifts while scoped (less when crouched, more when moving); hold `Shift` to steady it for a few seconds. Running out of breath makes the drift worse until you recover.
+
+Mouse sensitivity scales with the zoom, and aiming through the sights shrinks the bullet spread. Firing the rifle from the hip is inaccurate.
+
 ### Phones and tablets
 
-The game detects touch screens and shows on-screen controls. Play in landscape (a reminder appears in portrait). Tapping **Begin Mission** goes fullscreen where the browser allows it. On iPhone, use *Share → Add to Home Screen* for a fullscreen experience.
+The game detects touch screens and shows on-screen controls. Play in landscape (a reminder appears in portrait). Tapping **Iniciar misión** goes fullscreen where the browser allows it. On iPhone, use *Share → Add to Home Screen* for a fullscreen experience.
 
 | Action | Touch |
 | --- | --- |
 | Move / sprint | Left thumb anywhere on the left side (floating joystick); push to the edge to sprint |
 | Look | Drag with the right thumb |
-| Fire | **FIRE**; drag it to keep aiming while you shoot |
-| Sights / crouch | **AIM** and **CROUCH** (toggles) |
-| Reload / jump / grenade / knife | **RELOAD**, **JUMP**, **NADE**, **KNIFE** |
-| Pick up, enter or exit vehicle | **USE** (lights up when something is in reach) |
+| Fire | **FUEGO**; drag it to keep aiming while you shoot |
+| Sights / crouch | **MIRA** and **AGACHAR** (toggles) |
+| Reload / jump / grenade / knife | **RECARGA**, **SALTO**, **GRANADA**, **CUCHILLO** |
+| Pick up, enter or exit vehicle | **USAR** (lights up when something is in reach) |
 | Switch weapon | Tap the weapon panel (top right) |
 | Drive | Joystick: up/down throttle, left/right steer |
 | Pause | **❚❚** (also pauses when you leave the app) |
 
-Touch devices start on **Low** graphics (no grass, lighter shadows and resolution). You can raise it from the menu on powerful phones. Add `?touch` to the URL to force the touch controls on a desktop.
+Touch devices start on **Low** (*Bajos*) graphics (no grass, lighter shadows and resolution). You can raise it from the menu on powerful phones. Add `?touch` to the URL to force the touch controls on a desktop.
 
 Weapons: **M1911** pistol, **Thompson M1A1** (from the crash site crate) and a **Kar98k** rifle (at the foot of the north-west watchtower).
 
@@ -102,4 +114,4 @@ vercel deploy --prod
 
 ## Requirements
 
-A browser with WebGL 2: desktop (Chrome, Edge, Firefox, Safari or Brave) with mouse and keyboard, or a recent phone or tablet with touch controls. If the frame rate drops, choose **Graphics: Medium or Low** in the menu.
+A browser with WebGL 2: desktop (Chrome, Edge, Firefox, Safari or Brave) with mouse and keyboard, or a recent phone or tablet with touch controls. If the frame rate drops, choose **Gráficos: Medios** or **Bajos** in the menu.

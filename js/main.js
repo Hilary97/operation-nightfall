@@ -34,7 +34,7 @@ async function init() {
   document.getElementById('app').appendChild(renderer.domElement);
   G.renderer = renderer;
 
-  setLoad(10, 'Painting textures…');
+  setLoad(10, 'Pintando texturas…');
   await nextFrame();
   G.T = createTextures();
   G.audio = new AudioEngine();
@@ -47,10 +47,10 @@ async function init() {
   G.tracers = new Tracers(G.scene);
   G.flash = new FlashPool(G.scene, 3);
 
-  setLoad(30, 'Raising the terrain and planting the forest…');
+  setLoad(30, 'Elevando el terreno y plantando el bosque…');
   await nextFrame();
   buildWorld(G.T);
-  setLoad(65, 'Deploying the garrison…');
+  setLoad(65, 'Desplegando la guarnición…');
   await nextFrame();
   G.player = new Player();
   G.player.reset(WAKE.x, WAKE.z, 0);
@@ -58,7 +58,7 @@ async function init() {
   spawnBarrels();
   spawnVehicles();
   spawnEnemies();
-  setLoad(85, 'Compiling shaders…');
+  setLoad(85, 'Compilando shaders…');
   await nextFrame();
 
   // Post-processing chain: scene -> first-person weapon -> bloom -> tone map -> film look
@@ -90,7 +90,7 @@ async function init() {
   bindInput();
   bindUI();
   if (G.touch) initTouch();
-  setLoad(100, 'Ready');
+  setLoad(100, 'Listo');
   await nextFrame();
   $('loading').classList.add('hidden');
   G.state = 'menu';
@@ -227,7 +227,7 @@ function beginGameplay() {
   G.audio.startWind(0.16);
   G.audio.heartbeat(0.7);
   setTimeout(() => G.audio.heartbeat(0.5), 1100);
-  setTimeout(() => G.hud.subtitle('...Ugh... my head... Where... where am I?', 5), 1500);
+  setTimeout(() => G.hud.subtitle('...Ugh... mi cabeza... ¿Dónde... dónde estoy?', 5), 1500);
   G.stats.startTime = performance.now();
   G.state = 'play';
   lock();
@@ -311,7 +311,7 @@ function searchlightDetection() {
         g.setLast(P.aimPoint);
         g.alert = 1;
         g.enterCombat();
-        G.hud.notice('SPOTTED', 'Stay out of the searchlights');
+        G.hud.notice('DESCUBIERTO', 'Mantente fuera de los reflectores');
       }
     }
   }

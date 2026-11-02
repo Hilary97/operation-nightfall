@@ -151,13 +151,13 @@ export class Intro {
   timeline() {
     const H = G.hud, A = G.audio;
     return [
-      [0, () => { H.cinema(true); H.fade(0, 2500); A.startPlaneEngine(); A.startWind(0.05); H.caption('NORMANDY, FRANCE<br><small>June 6, 1944 — 01:14 hours</small>'); }],
-      [4.5, () => H.caption('OPERATION NIGHTFALL<br><small>101st Airborne · Pathfinder team</small>')],
-      [8.5, () => { H.caption(null); H.subtitle('SGT. HOLLIS: Listen up! Twenty minutes to the drop zone. Check your gear — and check your buddy\'s gear!', 5); }],
-      [13.5, () => { this.flakT = 0.3; H.subtitle('PVT. MILLER: Sarge... is that flak?', 3); }],
-      [17, () => { H.subtitle('SGT. HOLLIS: Stand up! Hook up! We are going early!', 3.5); this.standUp = true; A.bell(); }],
+      [0, () => { H.cinema(true); H.fade(0, 2500); A.startPlaneEngine(); A.startWind(0.05); H.caption('NORMANDÍA, FRANCIA<br><small>6 de junio de 1944 — 01:14 horas</small>'); }],
+      [4.5, () => H.caption('OPERACIÓN NIGHTFALL<br><small>101.ª División Aerotransportada · Equipo de exploradores</small>')],
+      [8.5, () => { H.caption(null); H.subtitle('SGTO. HOLLIS: ¡Atención! Veinte minutos para la zona de salto. Revisen su equipo — ¡y el de su compañero!', 5); }],
+      [13.5, () => { this.flakT = 0.3; H.subtitle('SDO. MILLER: Sargento... ¿eso es fuego antiaéreo?', 3); }],
+      [17, () => { H.subtitle('SGTO. HOLLIS: ¡De pie! ¡Engánchense! ¡Saltamos antes!', 3.5); this.standUp = true; A.bell(); }],
       [21, () => this.hit(1)],
-      [21.3, () => H.subtitle('PILOT: We\'re hit! Engine two is gone! Get out — GET OUT!', 3.5)],
+      [21.3, () => H.subtitle('PILOTO: ¡Nos dieron! ¡Perdimos el motor dos! ¡Salten — SALTEN!', 3.5)],
       [24.5, () => this.hit(2)],
       [25.2, () => this.toFall()],
       [33.5, () => { H.fade(1, 600); A.thud(null); A.heartbeat(0.9); }],

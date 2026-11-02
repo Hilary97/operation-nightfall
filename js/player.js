@@ -6,11 +6,13 @@ import { Grenade } from './entities.js';
 import * as M from './models.js';
 import { clamp, lerp, rand, wrapAngle } from './util.js';
 
+// spread: hip-fire cone, adsSpread: cone through the sights, adsFov: camera FOV when fully aimed.
 const WDEF = [
-  { id: 'pistol', name: 'M1911', magSize: 7, reserve: 35, maxReserve: 70, rate: 0.17, auto: false, dmg: 38, spread: 0.012, kick: 0.024, reload: 1.5, sound: 'pistol', noise: 45, range: 140, adsFov: 58 },
-  { id: 'smg', name: 'Thompson M1A1', magSize: 30, reserve: 0, maxReserve: 240, rate: 0.088, auto: true, dmg: 25, spread: 0.03, kick: 0.013, reload: 2.3, sound: 'smg', noise: 65, range: 160, adsFov: 56 },
-  { id: 'rifle', name: 'Kar98k', magSize: 5, reserve: 0, maxReserve: 50, rate: 1.15, auto: false, dmg: 125, spread: 0.002, kick: 0.06, reload: 2.8, sound: 'kar', noise: 90, range: 320, adsFov: 30 },
+  { id: 'pistol', name: 'M1911', magSize: 7, reserve: 35, maxReserve: 70, rate: 0.17, auto: false, dmg: 38, spread: 0.012, adsSpread: 0.0025, kick: 0.024, reload: 1.5, sound: 'pistol', noise: 45, range: 140, adsFov: 55 },
+  { id: 'smg', name: 'Thompson M1A1', magSize: 30, reserve: 0, maxReserve: 240, rate: 0.088, auto: true, dmg: 25, spread: 0.03, adsSpread: 0.0055, kick: 0.013, reload: 2.3, sound: 'smg', noise: 65, range: 160, adsFov: 52 },
+  { id: 'rifle', name: 'Kar98k ZF39', magSize: 5, reserve: 0, maxReserve: 50, rate: 1.15, auto: false, dmg: 125, spread: 0.03, adsSpread: 0.0003, kick: 0.06, reload: 2.8, sound: 'kar', noise: 90, range: 320, adsFov: 15, scope: true },
 ];
+const HIP_FOV = 75;
 
 const UP = new THREE.Vector3(0, 1, 0);
 const _dir = new THREE.Vector3(), _o = new THREE.Vector3(), _hit = new THREE.Vector3(), _e = new THREE.Euler(0, 0, 0, 'YXZ');
@@ -53,15 +55,30 @@ class ViewModel {
     M.beam(lh.clone().add(new THREE.Vector3(0, -0.02, 0.05)), new THREE.Vector3(-0.2, -0.32, 0.1), 0.085, 0.085, sleeve, g);
   }
 
+  // Sights are built around a sight line at local y = SIGHT; the ADS offset puts
+  // that line (the dots, for the pistol) exactly on the screen centre, the bullet path.
+  sightDot() {
+    return M.mat('vmsightdot', { color: 0xf2ecd8, emissive: 0xfff2c8, emissiveIntensity: 1.1, roughness: 0.4 });
+  }
+
   buildPistol() {
     const g = new THREE.Group();
     const steel = M.mat('vmsteel', { color: 0x2a2d32, roughness: 0.35, metalness: 0.85 });
     const grip = M.mat('vmgrip', { color: 0x4a2e1a, roughness: 0.6 });
+    const dot = this.sightDot();
+    const SIGHT = 0.059;
     M.part(M.boxG(0.034, 0.038, 0.21), steel, 0, 0.03, -0.06, g, false);
     M.part(M.boxG(0.03, 0.025, 0.17), steel, 0, 0.0, -0.05, g, false);
     M.part(M.boxG(0.03, 0.1, 0.05), grip, 0, -0.045, 0.02, g, false).rotation.x = 0.25;
-    M.part(M.boxG(0.006, 0.01, 0.006), steel, 0, 0.054, -0.16, g, false);
-    g.userData = { hip: new THREE.Vector3(0.17, -0.17, -0.38), ads: new THREE.Vector3(0, -0.054, -0.3), muzzle: new THREE.Vector3(0, 0.03, -0.18) };
+    // Rear notch: two blades whose tops sit on the sight line, with a dot on each
+    for (const s of [-1, 1]) {
+      M.part(M.boxG(0.009, 0.01, 0.008), steel, s * 0.008, SIGHT - 0.005, 0.036, g, false);
+      M.part(M.boxG(0.0022, 0.0022, 0.001), dot, s * 0.0052, SIGHT - 0.0045, 0.0405, g, false);
+    }
+    // Front post, its top on the sight line, with a dot facing the shooter
+    M.part(M.boxG(0.0045, 0.01, 0.007), steel, 0, SIGHT - 0.005, -0.155, g, false);
+    M.part(M.boxG(0.0024, 0.0024, 0.001), dot, 0, SIGHT - 0.0045, -0.151, g, false);
+    g.userData = { hip: new THREE.Vector3(0.17, -0.17, -0.38), ads: new THREE.Vector3(0, -(SIGHT - 0.0045), -0.31), muzzle: new THREE.Vector3(0, 0.03, -0.18) };
     this.hands(g, [0, -0.05, 0.03], [-0.02, -0.06, 0.0]);
     return g;
   }
@@ -77,9 +94,16 @@ class ViewModel {
     M.part(M.boxG(0.035, 0.09, 0.045), wood, 0, -0.07, 0.02, g, false).rotation.x = 0.3;
     M.part(M.boxG(0.035, 0.08, 0.04), wood, 0, -0.06, -0.24, g, false);
     M.part(M.boxG(0.028, 0.17, 0.04), steel, 0, -0.11, -0.12, g, false);
-    M.part(M.boxG(0.012, 0.03, 0.02), steel, 0, 0.045, 0.0, g, false);
-    M.part(M.boxG(0.006, 0.014, 0.006), steel, 0, 0.037, -0.25, g, false);
-    g.userData = { hip: new THREE.Vector3(0.16, -0.18, -0.4), ads: new THREE.Vector3(0, -0.044, -0.28), muzzle: new THREE.Vector3(0, 0.0, -0.53) };
+    const SIGHT = 0.062;
+    // Rear peep: an aperture ring on a raised base, flanked by protective ears
+    M.part(M.boxG(0.014, 0.02, 0.012), steel, 0, 0.04, 0.03, g, false);
+    M.part(new THREE.TorusGeometry(0.0085, 0.0018, 8, 24), steel, 0, SIGHT, 0.03, g, false);
+    for (const s of [-1, 1]) M.part(M.boxG(0.004, 0.032, 0.016), steel, s * 0.0165, 0.056, 0.03, g, false);
+    // Front blade on the barrel, its tip on the sight line
+    M.part(M.boxG(0.012, 0.012, 0.02), steel, 0, 0.022, -0.49, g, false);
+    M.part(M.boxG(0.0035, 0.034, 0.006), steel, 0, SIGHT - 0.017, -0.49, g, false);
+    M.part(M.boxG(0.0025, 0.0025, 0.001), this.sightDot(), 0, SIGHT - 0.0025, -0.4865, g, false);
+    g.userData = { hip: new THREE.Vector3(0.16, -0.18, -0.4), ads: new THREE.Vector3(0, -SIGHT, -0.24), muzzle: new THREE.Vector3(0, 0.0, -0.53) };
     this.hands(g, [0, -0.07, 0.03], [0, -0.07, -0.24]);
     return g;
   }
@@ -94,8 +118,20 @@ class ViewModel {
     M.part(M.boxG(0.03, 0.035, 0.22), steel, 0, 0.03, 0.02, g, false);
     M.part(new THREE.SphereGeometry(0.015, 8, 6), steel, 0.05, 0.03, 0.08, g, false);
     M.part(M.boxG(0.004, 0.012, 0.004), steel, 0, 0.046, -0.78, g, false);
-    M.part(M.boxG(0.02, 0.012, 0.01), steel, 0, 0.05, -0.05, g, false);
-    g.userData = { hip: new THREE.Vector3(0.15, -0.17, -0.42), ads: new THREE.Vector3(0, -0.05, -0.26), muzzle: new THREE.Vector3(0, 0.025, -0.8) };
+    // ZF39 telescopic sight: tube, objective and ocular bells, mounts and lenses
+    const SIGHT = 0.085;
+    const glass = M.mat('vmglass', { color: 0x1a2a3a, emissive: 0x2a4a70, emissiveIntensity: 0.35, roughness: 0.05, metalness: 0.6 });
+    M.part(M.cylZ(0.014, 0.22, 14), steel, 0, SIGHT, 0, g, false);
+    M.part(M.cylZ(0.021, 0.07, 16), steel, 0, SIGHT, -0.13, g, false);
+    M.part(M.cylZ(0.018, 0.05, 16), steel, 0, SIGHT, 0.13, g, false);
+    for (const z of [-0.06, 0.08]) {
+      M.part(M.boxG(0.012, 0.03, 0.012), steel, 0, 0.06, z, g, false);
+      M.part(new THREE.TorusGeometry(0.0155, 0.003, 6, 18), steel, 0, SIGHT, z, g, false);
+    }
+    M.part(M.cylZ(0.006, 0.02, 8), steel, 0, SIGHT + 0.018, 0.02, g, false).rotation.x = Math.PI / 2;
+    M.part(new THREE.CircleGeometry(0.019, 18), glass, 0, SIGHT, -0.1655, g, false).rotation.y = Math.PI;
+    M.part(new THREE.CircleGeometry(0.016, 18), glass, 0, SIGHT, 0.1556, g, false);
+    g.userData = { hip: new THREE.Vector3(0.15, -0.17, -0.42), ads: new THREE.Vector3(0, -SIGHT, -0.12), muzzle: new THREE.Vector3(0, 0.025, -0.8) };
     this.hands(g, [0, -0.06, 0.12], [0, -0.06, -0.3]);
     return g;
   }
@@ -134,6 +170,8 @@ class ViewModel {
     this.flashT -= dt;
     if (this.flashT <= 0) { this.flash.visible = false; this.flashLight.intensity = 0; }
     const base = _o.copy(u.hip).lerp(u.ads, P.ads);
+    const vfov = lerp(55, 46, P.ads);
+    if (Math.abs(this.camera.fov - vfov) > 0.05) { this.camera.fov = vfov; this.camera.updateProjectionMatrix(); }
     const bobAmt = P.onGround ? Math.min(1, P.hSpeed / 5) * (1 - P.ads * 0.85) : 0;
     const bx = Math.sin(P.bob) * 0.012 * bobAmt, by = -Math.abs(Math.cos(P.bob)) * 0.012 * bobAmt;
     this.sway.lerp(new THREE.Vector2(clamp(-G.input.mouse.dx * 0.0004, -0.03, 0.03), clamp(G.input.mouse.dy * 0.0004, -0.03, 0.03)), Math.min(1, dt * 10));
@@ -144,14 +182,15 @@ class ViewModel {
     const throwK = P.throwT > 0 ? Math.sin((1 - P.throwT / 0.6) * Math.PI) : 0;
     g.position.set(
       base.x + bx + this.sway.x * (1 - P.ads * 0.7) - this.sprintK * 0.05,
-      base.y + by + this.sway.y - reloadK * 0.12 - switchK * 0.3 - throwK * 0.25 - this.sprintK * 0.04,
+      base.y + by + this.sway.y * (1 - P.ads * 0.7) - reloadK * 0.12 - switchK * 0.3 - throwK * 0.25 - this.sprintK * 0.04,
       base.z + this.kick * (P.w.id === 'rifle' ? 0.09 : 0.045));
     g.rotation.set(this.kick * (P.w.id === 'rifle' ? 0.16 : 0.08) - reloadK * 0.7 + this.sprintK * -0.35, this.sprintK * 0.6, reloadK * 0.5 + this.sprintK * 0.25);
     const mk = P.meleeT > 0 ? Math.sin((1 - P.meleeT / 0.45) * Math.PI) : 0;
     this.knife.visible = mk > 0.01;
     this.knife.position.set(0.18 - mk * 0.18, -0.2 + mk * 0.05, -0.4 - mk * 0.35);
     this.knife.rotation.set(0, mk * 0.4, 0);
-    g.visible = mk < 0.05;
+    // Once the eye is behind the scope the overlay takes over from the 3D model
+    g.visible = mk < 0.05 && P.scopeK < 0.6;
   }
 }
 
@@ -161,6 +200,7 @@ export class Player {
     this.pos = new THREE.Vector3();
     this.vel = new THREE.Vector3();
     this.aimPoint = new THREE.Vector3();
+    this.aimSway = new THREE.Vector2();
     this.yaw = 0;
     this.pitch = 0;
     this.vm = new ViewModel();
@@ -184,6 +224,12 @@ export class Player {
     this.onGround = true;
     this.inVehicle = null;
     this.ads = 0;
+    this.scopeK = 0;
+    this.swayAmp = 0;
+    this.aimSway.set(0, 0);
+    this.breath = 1;
+    this.breathOut = false;
+    this.holdingBreath = false;
     this.fireCd = 0;
     this.reloadT = 0;
     this.switchT = 0;
@@ -259,7 +305,8 @@ export class Player {
   // ---- per frame ----
   update(dt, t) {
     const I = G.input, K = I.keys, Pr = I.pressed;
-    const sens = 0.0022 * G.settings.sens * (1 - this.ads * 0.45 * (this.w.id === 'rifle' ? 1.3 : 1));
+    // Sensitivity follows the zoom, so the same mouse move covers the same screen distance
+    const sens = 0.0022 * G.settings.sens * Math.pow(Math.min(1, G.camera.fov / HIP_FOV), 0.85);
 
     if (!this.alive) { this.updateDeath(dt); return; }
     this.vm.root.visible = !this.inVehicle && this.wakeT <= 0;
@@ -331,6 +378,9 @@ export class Player {
 
     // Weapon state
     this.ads = lerp(this.ads, I.mouse.right && !this.sprinting && this.reloadT <= 0 ? 1 : 0, Math.min(1, dt * 12));
+    this.scopeK = this.w.scope ? clamp((this.ads - 0.75) / 0.2, 0, 1) : 0;
+    this.updateBreath(dt, K);
+    this.updateAimSway(dt, t);
     this.fireCd -= dt;
     this.switchT = Math.max(0, this.switchT - dt);
     this.throwT = Math.max(0, this.throwT - dt);
@@ -378,11 +428,36 @@ export class Player {
       this.pos.x + Math.cos(this.yaw) * Math.sin(this.bob) * 0.03 * bobAmt + rand(-1, 1) * s * 0.15,
       this.pos.y + eyeH + Math.sin(this.bob * 2) * 0.045 * bobAmt + rand(-1, 1) * s * 0.15,
       this.pos.z - Math.sin(this.yaw) * Math.sin(this.bob) * 0.03 * bobAmt + rand(-1, 1) * s * 0.15);
-    _e.set(this.pitch + this.kickPitch, this.yaw, this.roll + rand(-1, 1) * s * 0.03);
+    _e.set(this.pitch + this.kickPitch + this.aimSway.y, this.yaw + this.aimSway.x, this.roll + rand(-1, 1) * s * 0.03);
     cam.quaternion.setFromEuler(_e);
-    const fov = lerp(this.sprinting ? 80 : 75, this.w.adsFov, this.ads);
+    const fov = lerp(this.sprinting ? 80 : HIP_FOV, this.w.adsFov, this.ads);
     if (Math.abs(cam.fov - fov) > 0.05) { cam.fov = lerp(cam.fov, fov, Math.min(1, dt * 14)); cam.updateProjectionMatrix(); }
     this.vm.update(dt, this);
+  }
+
+  // Scoped only: Shift holds the breath for a few seconds; running out leaves you shaky.
+  updateBreath(dt, K) {
+    const scoped = this.scopeK > 0.9;
+    this.holdingBreath = scoped && !this.breathOut && (K.has('ShiftLeft') || K.has('ShiftRight'));
+    if (this.holdingBreath) {
+      this.breath = Math.max(0, this.breath - dt / 4.5);
+      if (this.breath === 0) { this.breathOut = true; this.holdingBreath = false; G.audio.heartbeat(0.4); }
+    } else {
+      this.breath = Math.min(1, this.breath + dt / (this.breathOut ? 3.5 : 2.2));
+      if (this.breathOut && this.breath > 0.6) this.breathOut = false;
+    }
+  }
+
+  // Slow figure-eight drift while aiming; it rotates the camera, so the shot follows it.
+  updateAimSway(dt, t) {
+    let amp = (this.w.scope ? 0.0065 : 0.0016) * this.ads;
+    amp *= (this.crouching ? 0.5 : 1) * (this.moving ? 2.2 : 1) * (G.touch ? 0.5 : 1);
+    amp *= this.holdingBreath ? 0.07 : this.breathOut ? 1.8 : 1;
+    this.swayAmp = lerp(this.swayAmp, amp, Math.min(1, dt * 5));
+    const a = this.swayAmp;
+    this.aimSway.set(
+      (Math.sin(t * 0.83) * 0.7 + Math.sin(t * 1.91 + 0.4) * 0.3) * a,
+      (Math.sin(t * 1.66 + 1.3) * 0.45 + Math.sin(t * 2.3) * 0.2) * a);
   }
 
   updatePrompt() {
@@ -397,7 +472,7 @@ export class Player {
     let veh = null;
     for (const v of G.vehicles) if (Math.hypot(v.pos.x - this.pos.x, v.pos.z - this.pos.z) < 3.4) veh = v;
     this.vehTarget = best ? null : veh;
-    G.hud.prompt(best ? `[E] ${best.label}` : veh ? '[E] Drive the Kübelwagen' : null);
+    G.hud.prompt(best ? `[E] ${best.label}` : veh ? '[E] Conducir el Kübelwagen' : null);
   }
 
   interact() {
@@ -411,7 +486,7 @@ export class Player {
     this.vm.root.visible = false;
     this.camYawOff = 0;
     G.audio.startEngine();
-    G.hud.prompt('[E] Exit vehicle   ·   W/S drive   ·   A/D steer   ·   Space brake');
+    G.hud.prompt('[E] Salir del vehículo   ·   W/S acelerar   ·   A/D girar   ·   Espacio frenar');
   }
 
   exitVehicle() {
@@ -480,7 +555,7 @@ export class Player {
     this.fireCd = w.rate;
     G.stats.shots++;
     const cam = G.camera;
-    let spread = w.spread * (1 - this.ads * 0.82);
+    let spread = lerp(w.spread, w.adsSpread, this.ads);
     if (this.moving) spread *= 1.8;
     if (this.crouching) spread *= 0.7;
     if (!this.onGround) spread *= 3;
@@ -574,7 +649,7 @@ export class Player {
         e.damage(unaware ? 999 : 60, false);
         G.hud.hitmarker(false, e.dead);
         G.fx.emit('blood', new THREE.Vector3(e.pos.x, e.pos.y + 1.3, e.pos.z), { count: 6, speed: 2 });
-        if (unaware) G.hud.notice('SILENT KILL', '');
+        if (unaware) G.hud.notice('BAJA SILENCIOSA', '');
         break;
       }
     }

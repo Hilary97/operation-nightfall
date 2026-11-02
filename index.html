@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="es">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
@@ -7,8 +7,8 @@
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="theme-color" content="#070706">
-  <title>Operation Nightfall — 1944</title>
-  <meta name="description" content="A WWII first-person shooter built with Three.js, HTML, CSS and JavaScript. Shot down over Normandy, you wake up lost in enemy territory.">
+  <title>Operación Nightfall — 1944</title>
+  <meta name="description" content="Un shooter en primera persona de la Segunda Guerra Mundial hecho con Three.js, HTML, CSS y JavaScript. Derribado sobre Normandía, despiertas perdido en territorio enemigo.">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;600;700&family=Special+Elite&display=swap" rel="stylesheet">
@@ -28,14 +28,23 @@
 
   <!-- In-game HUD -->
   <div id="hud" class="hidden">
+    <div id="ads-vignette"></div>
+    <div id="scope">
+      <div class="scope-lens"></div>
+      <svg class="scope-reticle" viewBox="-100 -100 200 200" preserveAspectRatio="xMidYMid meet">
+        <path d="M-100 -1.7H-15V1.7H-100ZM15 -1.7H100V1.7H15ZM-2.8 100V7L0 0L2.8 7V100Z" />
+        <path d="M-15 0H15" stroke-width="0.35" />
+      </svg>
+      <div id="breath"><div class="breath-label">SHIFT · CONTENER LA RESPIRACIÓN</div><div class="breath-bar"><i id="breath-fill"></i></div></div>
+    </div>
     <div id="crosshair"><i></i><i></i><i></i><i></i></div>
     <div id="hitmarker"></div>
     <div id="damage-indicators"></div>
-    <div id="objective"><div class="obj-label">OBJECTIVE</div><div id="obj-text"></div></div>
+    <div id="objective"><div class="obj-label">OBJETIVO</div><div id="obj-text"></div></div>
     <div id="compass" class="hidden"><canvas id="compass-canvas" width="360" height="34"></canvas><div id="compass-dist"></div></div>
     <div id="enemy-count"></div>
     <div id="health">
-      <div class="h-label">HEALTH <span id="health-num">100</span></div>
+      <div class="h-label">SALUD <span id="health-num">100</span></div>
       <div class="h-bar"><div id="health-fill"></div></div>
     </div>
     <div id="weapon">
@@ -49,75 +58,76 @@
   </div>
 
   <!-- Cinematic overlay -->
-  <div id="cine"><div class="bar top"></div><div class="bar bottom"></div><div id="caption"></div><div class="skip">ENTER / SPACE — skip</div></div>
+  <div id="cine"><div class="bar top"></div><div class="bar bottom"></div><div id="caption"></div><div class="skip">ENTER / ESPACIO — saltar</div></div>
   <div id="subtitle"></div>
   <div id="fade"></div>
 
   <!-- Main menu -->
   <div id="menu" class="screen hidden">
     <div class="menu-inner">
-      <div class="stamp">TOP SECRET</div>
-      <div class="kicker">1944 · EUROPEAN THEATER</div>
-      <h1>OPERATION<br><span>NIGHTFALL</span></h1>
-      <p class="brief">Your C-47 is shot down on the way to the drop zone. You wake up alone, lost behind enemy lines — and the forest hides something the enemy would kill to protect.</p>
-      <button id="btn-start" class="btn">BEGIN MISSION</button>
+      <div class="stamp">ALTO SECRETO</div>
+      <div class="kicker">1944 · FRENTE EUROPEO</div>
+      <h1>OPERACIÓN<br><span>NIGHTFALL</span></h1>
+      <p class="brief">Tu C-47 es derribado camino a la zona de salto. Despiertas solo, perdido tras las líneas enemigas — y el bosque esconde algo que el enemigo mataría por proteger.</p>
+      <button id="btn-start" class="btn">INICIAR MISIÓN</button>
       <div class="opts">
-        <label>Graphics <select id="opt-quality"><option value="high">High</option><option value="medium">Medium</option><option value="low">Low</option></select></label>
-        <label>Difficulty <select id="opt-difficulty"><option value="0.7">Recruit</option><option value="1" selected>Regular</option><option value="1.3">Veteran</option></select></label>
-        <label>Sensitivity <input id="opt-sens" type="range" min="0.3" max="2.5" step="0.05" value="1"></label>
+        <label>Gráficos <select id="opt-quality"><option value="high">Altos</option><option value="medium">Medios</option><option value="low">Bajos</option></select></label>
+        <label>Dificultad <select id="opt-difficulty"><option value="0.7">Recluta</option><option value="1" selected>Regular</option><option value="1.3">Veterano</option></select></label>
+        <label>Sensibilidad <input id="opt-sens" type="range" min="0.3" max="2.5" step="0.05" value="1"></label>
       </div>
       <div class="controls desktop-only">
-        <div><b>WASD</b> move</div><div><b>Mouse</b> aim · <b>LMB</b> fire · <b>RMB</b> sights</div>
-        <div><b>Shift</b> sprint · <b>C</b> crouch · <b>Space</b> jump</div><div><b>R</b> reload · <b>1-3</b> weapons · <b>G</b> grenade</div>
-        <div><b>V</b> knife (silent) · <b>E</b> interact / drive</div><div><b>Esc</b> pause</div>
+        <div><b>WASD</b> moverse</div><div><b>Ratón</b> mirar · <b>Clic izq.</b> disparar · <b>Clic der.</b> apuntar</div>
+        <div><b>Shift</b> correr · <b>C</b> agacharse · <b>Espacio</b> saltar</div><div><b>R</b> recargar · <b>1-3</b> armas · <b>G</b> granada</div>
+        <div><b>V</b> cuchillo (silencioso) · <b>E</b> interactuar / conducir</div><div><b>Shift</b> con mira telescópica: contener la respiración</div>
+        <div><b>Esc</b> pausa</div>
       </div>
       <div class="controls touch-only">
-        <div><b>Left thumb</b> move · push to the edge to sprint</div><div><b>Right thumb</b> look around</div>
-        <div><b>FIRE</b> shoots — drag it to aim while firing</div><div><b>Tap the weapon</b> to switch · <b>USE</b> pick up / drive</div>
+        <div><b>Pulgar izquierdo</b> moverse · empuja hasta el borde para correr</div><div><b>Pulgar derecho</b> mirar alrededor</div>
+        <div><b>FUEGO</b> dispara — arrástralo para apuntar mientras disparas</div><div><b>MIRA</b> activa las miras · <b>Toca el arma</b> para cambiarla · <b>USAR</b> recoger / conducir</div>
       </div>
     </div>
   </div>
 
-  <div id="rotate"><div class="rotate-icon">⟳</div><div>Rotate your device to landscape</div></div>
+  <div id="rotate"><div class="rotate-icon">⟳</div><div>Gira tu dispositivo a horizontal</div></div>
 
-  <div id="awaken" class="screen hidden"><div class="awaken-text">Click to open your eyes</div></div>
+  <div id="awaken" class="screen hidden"><div class="awaken-text">Haz clic para abrir los ojos</div></div>
 
   <div id="pause" class="screen hidden">
     <div class="menu-inner small">
-      <h2>PAUSED</h2>
-      <button id="btn-resume" class="btn">RESUME</button>
-      <div class="opts"><label>Sensitivity <input id="opt-sens-pause" type="range" min="0.3" max="2.5" step="0.05" value="1"></label></div>
+      <h2>PAUSA</h2>
+      <button id="btn-resume" class="btn">CONTINUAR</button>
+      <div class="opts"><label>Sensibilidad <input id="opt-sens-pause" type="range" min="0.3" max="2.5" step="0.05" value="1"></label></div>
     </div>
   </div>
 
   <div id="dead" class="screen hidden">
     <div class="menu-inner small">
-      <h2 class="red">KILLED IN ACTION</h2>
-      <p class="brief">"The only easy day was yesterday."</p>
-      <button id="btn-retry" class="btn">RETRY FROM CHECKPOINT</button>
+      <h2 class="red">CAÍDO EN COMBATE</h2>
+      <p class="brief">"El único día fácil fue ayer."</p>
+      <button id="btn-retry" class="btn">REINTENTAR DESDE EL PUNTO DE CONTROL</button>
     </div>
   </div>
 
   <div id="victory" class="screen hidden">
     <div class="menu-inner">
-      <div class="stamp green">MISSION COMPLETE</div>
-      <h1>WELCOME<br><span>HOME, SOLDIER</span></h1>
-      <p class="brief">You made it back to Allied HQ with the rocket base intel. Command will take it from here.</p>
+      <div class="stamp green">MISIÓN CUMPLIDA</div>
+      <h1>BIENVENIDO<br><span>A CASA, SOLDADO</span></h1>
+      <p class="brief">Llegaste al cuartel general aliado con la información de la base de cohetes. El Alto Mando se encargará desde aquí.</p>
       <div class="stats">
-        <div><span>TIME</span><b id="v-time"></b></div>
-        <div><span>KILLS</span><b id="v-kills"></b></div>
-        <div><span>ACCURACY</span><b id="v-acc"></b></div>
-        <div><span>HEADSHOTS</span><b id="v-head"></b></div>
-        <div><span>UNAWARE KILLS</span><b id="v-silent"></b></div>
+        <div><span>TIEMPO</span><b id="v-time"></b></div>
+        <div><span>BAJAS</span><b id="v-kills"></b></div>
+        <div><span>PRECISIÓN</span><b id="v-acc"></b></div>
+        <div><span>A LA CABEZA</span><b id="v-head"></b></div>
+        <div><span>SIGILOSAS</span><b id="v-silent"></b></div>
       </div>
-      <button id="btn-again" class="btn">PLAY AGAIN</button>
+      <button id="btn-again" class="btn">JUGAR DE NUEVO</button>
     </div>
   </div>
 
   <div id="loading">
-    <div class="load-title">OPERATION NIGHTFALL</div>
+    <div class="load-title">OPERACIÓN NIGHTFALL</div>
     <div class="load-track"><div id="load-bar"></div></div>
-    <div id="load-text">Loading…</div>
+    <div id="load-text">Cargando…</div>
   </div>
 
   <script type="module" src="js/main.js"></script>
