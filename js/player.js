@@ -317,7 +317,7 @@ export class Player {
   }
 
   damage(amount, from, explosion = false) {
-    if (!this.alive || G.state !== 'play') return;
+    if (!this.alive || G.state !== 'play' || G.godMode) return;
     if (this.inVehicle) amount *= 0.6;
     this.hp -= amount;
     this.lastHit = G.time;
@@ -587,7 +587,7 @@ export class Player {
       if (w.reserve > 0) this.startReload();
       return;
     }
-    w.mag--;
+    if (!G.infiniteAmmo) w.mag--;
     this.fireCd = w.rate;
     G.stats.shots++;
     const cam = G.camera;

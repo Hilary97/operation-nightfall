@@ -106,6 +106,8 @@ Three.js loads from the jsDelivr CDN through an import map.
 
 Debug shortcuts for testing: `?debug=play` (skip the intro at the wake point), `?debug=base` (at the breach in the west wall), `?debug=gate` (in front of the main gate), `?debug=intro`.
 
+Cheats: `?god` (the player takes no damage) and `?ammo` (the magazine never empties). They combine with each other and with debug, e.g. `?god&ammo` or `?debug=play&god`.
+
 ## Deploy
 
 The site deploys to Vercel as a static project (no framework, no build):

@@ -8,6 +8,9 @@ export const G = {
   touch,
   time: 0,
   debug: new URLSearchParams(location.search).has('debug'),
+  // Cheats: ?god makes the player take no damage, ?ammo stops the magazine from emptying.
+  godMode: params.has('god'),
+  infiniteAmmo: params.has('ammo'),
   settings: { sens: 1, quality: touch ? 'low' : 'high', difficulty: 1 },
   input: {
     keys: new Set(),
