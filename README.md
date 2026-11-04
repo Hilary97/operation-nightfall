@@ -6,6 +6,8 @@ The game's interface, dialogue and subtitles are in Spanish.
 
 **Play it:** https://operation-nightfall-cyan.vercel.app
 
+**Play with infinite health and ammo:** https://operation-nightfall-cyan.vercel.app/?god&ammo
+
 ## The story
 
 > Normandy, June 6, 1944 — 01:14 hours.
