@@ -23,6 +23,8 @@ export const G = {
   items: [],
   barrels: [],
   grenades: [],
+  projectiles: [],
+  tanks: [],
   vehicles: [],
   flags: { alarm: false, alarmT: 0 },
   stats: { kills: 0, shots: 0, hits: 0, headshots: 0, silent: 0, startTime: 0 },

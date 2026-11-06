@@ -4,6 +4,7 @@ import { H, WAKE, WRECK, BOUND } from './world.js';
 import * as M from './models.js';
 import { overlapsCircle, rayCyl } from './collision.js';
 import { clamp, lerp, rand } from './util.js';
+import { updateProjectiles } from './projectiles.js';
 
 const _v = new THREE.Vector3();
 
@@ -325,6 +326,7 @@ export function updateEntities(dt, t) {
     G.grenades[i].update(dt);
     if (G.grenades[i].dead) G.grenades.splice(i, 1);
   }
+  updateProjectiles(dt);
   for (const v of G.vehicles) v.update(dt);
   for (let i = G.world.fires.length - 1; i >= 0; i--) {
     const f = G.world.fires[i];

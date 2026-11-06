@@ -3,17 +3,21 @@ import { G } from './state.js';
 import { H, BOUND } from './world.js';
 import { resolveCircle, raycast } from './collision.js';
 import { Grenade } from './entities.js';
+import { Projectile } from './projectiles.js';
 import * as M from './models.js';
 import { clamp, lerp, rand, wrapAngle } from './util.js';
 
 // spread: hip-fire cone, adsSpread: cone through the sights, adsFov: camera FOV when fully aimed.
 // bolt: bolt action (cycling sound, heavier recoil). scope: aiming uses the scope overlay; zooms: FOV steps the wheel cycles;
 // sway: aim drift amplitude; reticle: which overlay reticle to show.
+// rocket: fires a Projectile instead of a hitscan bullet; spin: barrels must wind up before firing; heavy: slows the carrier.
 const WDEF = [
   { id: 'pistol', name: 'M1911', magSize: 7, reserve: 35, maxReserve: 70, rate: 0.17, auto: false, dmg: 38, spread: 0.012, adsSpread: 0.0025, kick: 0.024, reload: 1.5, sound: 'pistol', noise: 45, range: 140, adsFov: 55 },
   { id: 'smg', name: 'Thompson M1A1', magSize: 30, reserve: 0, maxReserve: 240, rate: 0.088, auto: true, dmg: 25, spread: 0.03, adsSpread: 0.0055, kick: 0.013, reload: 2.3, sound: 'smg', noise: 65, range: 160, adsFov: 52 },
   { id: 'rifle', name: 'Kar98k', magSize: 5, reserve: 0, maxReserve: 50, rate: 1.15, auto: false, dmg: 125, spread: 0.03, adsSpread: 0.0012, kick: 0.06, reload: 2.8, sound: 'kar', noise: 90, range: 320, adsFov: 32, bolt: true },
   { id: 'sniper', name: 'Springfield M1903A4', magSize: 5, reserve: 0, maxReserve: 30, rate: 1.4, auto: false, dmg: 180, spread: 0.05, adsSpread: 0.0001, kick: 0.08, reload: 3.2, sound: 'kar', noise: 100, range: 600, adsFov: 9.4, bolt: true, scope: true, zooms: [9.4, 6.25], zoomNames: ['8×', '12×'], sway: 0.009, reticle: 'mildot' },
+  { id: 'bazooka', name: 'Bazooka M1A1', magSize: 1, reserve: 0, maxReserve: 8, rate: 0.8, auto: false, dmg: 0, spread: 0.01, adsSpread: 0.003, kick: 0.09, reload: 2.6, sound: 'bazooka', noise: 110, range: 300, adsFov: 50, rocket: true },
+  { id: 'minigun', name: 'Minigun', magSize: 200, reserve: 0, maxReserve: 600, rate: 0.04, auto: true, dmg: 20, spread: 0.045, adsSpread: 0.03, kick: 0.006, reload: 4.2, sound: 'minigun', noise: 80, range: 180, adsFov: 62, spin: true, heavy: true },
 ];
 const HIP_FOV = 75;
 
@@ -34,7 +38,7 @@ class ViewModel {
     this.scene.add(this.flashLight);
     this.root = new THREE.Group();
     this.scene.add(this.root);
-    this.guns = [this.buildPistol(), this.buildThompson(), this.buildRifle(), this.buildSniper()];
+    this.guns = [this.buildPistol(), this.buildThompson(), this.buildRifle(), this.buildSniper(), this.buildBazooka(), this.buildMinigun()];
     for (const g of this.guns) { g.visible = false; this.root.add(g); }
     this.flash = new THREE.Sprite(new THREE.SpriteMaterial({ map: G.T.flash, transparent: true, depthWrite: false, blending: THREE.AdditiveBlending }));
     this.flash.visible = false;
@@ -166,6 +170,57 @@ class ViewModel {
     return g;
   }
 
+  buildBazooka() {
+    const g = new THREE.Group();
+    const od = M.mat('vmod', { color: 0x4b5030, roughness: 0.7, metalness: 0.25 });
+    const steel = M.mat('vmsteel', { color: 0x2a2d32, roughness: 0.35, metalness: 0.85 });
+    const wood = M.mat('vmwood', { color: 0x6a4024, roughness: 0.5 });
+    M.part(M.cylZ(0.045, 1.4, 14), od, 0, 0, -0.25, g, false);
+    M.part(M.cylY(0.07, 0.12, 14, 0.05).rotateX(Math.PI / 2), od, 0, 0, 0.5, g, false);
+    M.part(M.cylZ(0.05, 0.04, 14), steel, 0, 0, -0.93, g, false);
+    M.part(M.boxG(0.03, 0.1, 0.05), wood, 0, -0.08, 0.02, g, false).rotation.x = 0.2;
+    M.part(M.boxG(0.03, 0.09, 0.05), wood, 0, -0.08, -0.32, g, false);
+    M.part(M.boxG(0.006, 0.03, 0.06), steel, 0, -0.06, -0.03, g, false);
+    M.part(M.boxG(0.04, 0.06, 0.2), wood, 0, -0.03, 0.28, g, false);
+    // Rear peep and front frame sight on the left of the tube, both centred on the sight line
+    const SIGHT = 0.078;
+    M.part(M.boxG(0.008, SIGHT - 0.04, 0.01), steel, 0, (SIGHT + 0.04) / 2 - 0.012, 0.1, g, false);
+    M.part(new THREE.TorusGeometry(0.007, 0.0016, 8, 20), steel, 0, SIGHT, 0.1, g, false);
+    M.part(M.boxG(0.008, SIGHT - 0.035, 0.01), steel, 0, (SIGHT + 0.035) / 2 - 0.012, -0.55, g, false);
+    for (const s of [-1, 1]) M.part(M.boxG(0.003, 0.05, 0.004), steel, s * 0.022, SIGHT, -0.55, g, false);
+    M.part(M.boxG(0.047, 0.003, 0.004), steel, 0, SIGHT + 0.025, -0.55, g, false);
+    M.part(M.boxG(0.003, 0.012, 0.004), steel, 0, SIGHT - 0.006, -0.55, g, false);
+    M.part(M.boxG(0.0024, 0.0024, 0.001), this.sightDot(), 0, SIGHT, -0.547, g, false);
+    g.userData = { hip: new THREE.Vector3(0.2, -0.13, -0.35), ads: new THREE.Vector3(0, -SIGHT, -0.18), muzzle: new THREE.Vector3(0, 0, -0.97) };
+    this.hands(g, [0, -0.1, 0.02], [0, -0.1, -0.32]);
+    return g;
+  }
+
+  buildMinigun() {
+    const g = new THREE.Group();
+    const steel = M.mat('vmsteel', { color: 0x2a2d32, roughness: 0.35, metalness: 0.85 });
+    const dark = M.mat('vmdark', { color: 0x1c1d1f, roughness: 0.5, metalness: 0.7 });
+    M.part(M.boxG(0.14, 0.13, 0.3), dark, 0, 0, 0.05, g, false);
+    M.part(M.cylZ(0.05, 0.12, 14), steel, 0, 0, -0.14, g, false);
+    const barrels = new THREE.Group();
+    barrels.position.z = -0.2;
+    for (let i = 0; i < 6; i++) {
+      const a = (i / 6) * Math.PI * 2;
+      M.part(M.cylZ(0.009, 0.62, 8), steel, Math.cos(a) * 0.03, Math.sin(a) * 0.03, -0.31, barrels, false);
+    }
+    for (const z of [-0.12, -0.5]) M.part(M.cylZ(0.045, 0.02, 14), dark, 0, 0, z, barrels, false);
+    g.add(barrels);
+    // Carry handle on top and a spade grip at the back
+    M.part(M.boxG(0.02, 0.07, 0.02), steel, 0, 0.1, 0.12, g, false);
+    M.part(M.boxG(0.02, 0.07, 0.02), steel, 0, 0.1, -0.04, g, false);
+    M.part(M.boxG(0.02, 0.02, 0.18), steel, 0, 0.135, 0.04, g, false);
+    M.part(M.boxG(0.12, 0.03, 0.03), steel, 0, -0.02, 0.22, g, false);
+    M.part(M.boxG(0.08, 0.1, 0.06), M.mat('ammobox', { color: 0x4a4c30, roughness: 0.7, metalness: 0.3 }), 0.1, -0.06, 0.06, g, false);
+    g.userData = { hip: new THREE.Vector3(0.17, -0.22, -0.45), ads: new THREE.Vector3(0.1, -0.19, -0.42), muzzle: new THREE.Vector3(0, 0, -0.85), barrels };
+    this.hands(g, [0, -0.02, 0.22], [0, 0.135, 0.04]);
+    return g;
+  }
+
   buildKnife() {
     const g = new THREE.Group();
     M.part(M.boxG(0.02, 0.03, 0.2), M.mat('blade', { color: 0x9aa0a6, roughness: 0.2, metalness: 1 }), 0, 0, -0.12, g, false);
@@ -221,6 +276,7 @@ class ViewModel {
     this.knife.rotation.set(0, mk * 0.4, 0);
     // Once the eye is behind the scope the overlay takes over from the 3D model
     g.visible = mk < 0.05 && P.scopeK < 0.6;
+    if (u.barrels) u.barrels.rotation.z += P.spin * dt * 45;
   }
 }
 
@@ -266,6 +322,7 @@ export class Player {
     this.switchT = 0;
     this.throwT = 0;
     this.meleeT = 0;
+    this.spin = 0;
     this.lastHit = -99;
     this.hitFlash = 0;
     this.shake = 0;
@@ -368,7 +425,7 @@ export class Player {
     const wantCrouch = K.has('KeyC') || K.has('ControlLeft');
     this.crouch = lerp(this.crouch, wantCrouch ? 1 : 0, Math.min(1, dt * 10));
     this.sprinting = (K.has('ShiftLeft') || ax.sprint) && fwd > 0 && !this.crouching && this.ads < 0.3 && this.reloadT <= 0;
-    const speed = this.sprinting ? 7.6 : this.crouching ? 2.3 : this.ads > 0.5 ? 2.8 : 4.4;
+    const speed = (this.sprinting ? 7.6 : this.crouching ? 2.3 : this.ads > 0.5 ? 2.8 : 4.4) * (this.w.heavy ? 0.78 : 1);
     const sy = Math.sin(this.yaw), cy = Math.cos(this.yaw);
     let wx = -sy * fwd + cy * str, wz = -cy * fwd - sy * str;
     const wl = Math.hypot(wx, wz);
@@ -426,6 +483,8 @@ export class Player {
     if (Pr.has('Digit2')) this.switchTo(1);
     if (Pr.has('Digit3')) this.switchTo(2);
     if (Pr.has('Digit4')) this.switchTo(3);
+    if (Pr.has('Digit5')) this.switchTo(4);
+    if (Pr.has('Digit6')) this.switchTo(5);
     if (I.mouse.wheel && this.scopeK > 0.9 && this.w.zooms) {
       // Looking through a variable scope: the wheel changes magnification instead of weapon
       this.zoomI = (this.zoomI + (I.mouse.wheel > 0 ? 1 : this.w.zooms.length - 1)) % this.w.zooms.length;
@@ -437,7 +496,12 @@ export class Player {
     }
     if (Pr.has('KeyR')) this.startReload();
     const busy = this.switchT > 0 || this.reloadT > 0 || this.throwT > 0 || this.meleeT > 0 || this.sprinting;
-    if (!busy && this.fireCd <= 0 && (this.w.auto ? I.mouse.left || I.mouse.clicked : I.mouse.clicked)) this.fire();
+    if (this.w.spin) {
+      const wind = I.mouse.left && !this.sprinting && this.reloadT <= 0 && this.switchT <= 0;
+      if (wind && this.spin === 0) G.audio.spin();
+      this.spin = clamp(this.spin + (wind ? dt / 0.55 : -dt / 0.8), 0, 1);
+    } else this.spin = 0;
+    if (!busy && this.fireCd <= 0 && (!this.w.spin || this.spin >= 1) && (this.w.auto ? I.mouse.left || I.mouse.clicked : I.mouse.clicked)) this.fire();
     if (Pr.has('KeyG') && this.grenades > 0 && this.throwT <= 0) this.throwGrenade();
     if (Pr.has('KeyV') && this.meleeT <= 0) this.melee();
     if (Pr.has('KeyE')) this.interact();
@@ -598,6 +662,23 @@ export class Player {
     if (!this.onGround) spread *= 3;
     _dir.set(rand(-1, 1) * spread, rand(-1, 1) * spread, -1).normalize().applyQuaternion(cam.quaternion);
     const o = cam.position;
+    if (w.rocket) {
+      G.projectiles.push(new Projectile(o.clone().addScaledVector(_dir, 0.8), _dir, { speed: 70, radius: 7, dmg: 260, owner: 'player' }));
+    } else this.hitscan(w, o);
+    this.vm.fire();
+    G.audio.shot(w.sound, null);
+    G.flash.flash(o, 0xffaa55, 30, 0.07, 22);
+    G.mission.noise(this.pos, w.noise);
+    const kick = w.kick * (1 - this.ads * 0.35) * (this.crouching ? 0.75 : 1);
+    this.pitch = clamp(this.pitch + kick * 0.55, -1.45, 1.45);
+    this.yaw += rand(-1, 1) * kick * 0.25;
+    this.kickPitch += kick * 0.7;
+    if (w.bolt) setTimeout(() => G.audio.bolt(), 380);
+    if (w.mag === 0 && w.reserve > 0) setTimeout(() => this.startReload(), 250);
+  }
+
+  hitscan(w, o) {
+    const cam = G.camera;
     let best = w.range, target = null, head = false;
     for (const e of G.enemies) {
       const h = e.rayHit(o, _dir, best);
@@ -608,8 +689,13 @@ export class Player {
       const h = b.rayHit(o, _dir, best);
       if (h) { best = h.t; barrel = b; target = null; }
     }
+    let armour = null;
+    for (const tk of G.tanks) {
+      const h = tk.rayHit(o, _dir, best);
+      if (h) { best = h.t; armour = tk; target = null; barrel = null; }
+    }
     const wh = raycast(o, _dir, best);
-    if (wh) { best = wh.t; target = null; barrel = null; }
+    if (wh) { best = wh.t; target = null; barrel = null; armour = null; }
     _hit.copy(o).addScaledVector(_dir, best);
 
     if (target) {
@@ -622,6 +708,9 @@ export class Player {
     } else if (barrel) {
       barrel.damage(w.dmg);
       G.fx.emit('spark', _hit, { count: 6, speed: 5 });
+    } else if (armour) {
+      G.fx.emit('spark', _hit, { count: 5, speed: 6 });
+      G.audio.impact(_hit);
     } else if (wh) {
       G.fx.emit('dust', _hit, { count: 4, speed: 1.8, up: 1 });
       if (wh.kind === 'box') G.fx.emit('spark', _hit, { count: 3, speed: 4 });
@@ -632,16 +721,6 @@ export class Player {
       const start = _o.set(0.18, -0.15, -0.6).applyQuaternion(cam.quaternion).add(o);
       G.tracers.add(start, _hit, 0xffe0a0, 420);
     }
-    this.vm.fire();
-    G.audio.shot(w.sound, null);
-    G.flash.flash(o, 0xffaa55, 30, 0.07, 22);
-    G.mission.noise(this.pos, w.noise);
-    const kick = w.kick * (1 - this.ads * 0.35) * (this.crouching ? 0.75 : 1);
-    this.pitch = clamp(this.pitch + kick * 0.55, -1.45, 1.45);
-    this.yaw += rand(-1, 1) * kick * 0.25;
-    this.kickPitch += kick * 0.7;
-    if (w.bolt) setTimeout(() => G.audio.bolt(), 380);
-    if (w.mag === 0 && w.reserve > 0) setTimeout(() => this.startReload(), 250);
   }
 
   startReload() {

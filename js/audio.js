@@ -7,6 +7,9 @@ const SHOTS = {
   rifle: { v: 0.95, f: 2100, d: 0.5, th: 85, max: 480 },
   kar: { v: 0.9, f: 1900, d: 0.5, th: 80, max: 480 },
   mp40: { v: 0.5, f: 2300, d: 0.17, th: 105, max: 260 },
+  bazooka: { v: 0.9, f: 900, d: 0.7, th: 60, max: 400 },
+  minigun: { v: 0.4, f: 2800, d: 0.08, th: 120, max: 300 },
+  cannon: { v: 1.2, f: 700, d: 1.0, th: 45, max: 900 },
 };
 
 export class AudioEngine {
@@ -154,6 +157,13 @@ export class AudioEngine {
     this.burst({ out, t, dur: C.d, freq: C.f * (1 - far * 0.85) + 150, freqEnd: 180, vol: 1 });
     this.burst({ out, t, dur: 0.035, freq: 5000, type: 'highpass', vol: 0.6 * (1 - far) });
     this.tone({ out, t, dur: 0.2, freq: C.th, freqEnd: 30, vol: 0.9 * (1 - far * 0.7) });
+  }
+
+  // Minigun barrels winding up
+  spin() {
+    if (!this.ctx) return;
+    const out = this.out(0.35, 0, 0.2, 2);
+    this.tone({ out, t: this.t, dur: 0.6, freq: 120, freqEnd: 420, type: 'sawtooth', vol: 0.4 });
   }
 
   explosion(pos, big = 1) {

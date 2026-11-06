@@ -163,7 +163,7 @@ export const mission = {
     this.setCheckpoint();
   },
 
-  explode(pos, radius, dmg) {
+  explode(pos, radius, dmg, { antiTank = false, source = null } = {}) {
     const fx = G.fx;
     fx.emit('boom', pos, { size: radius / 8 });
     fx.emit('fire', pos, { count: 22, spread: radius * 0.25, speed: 7, up: 1.5, size: 2.2 });
@@ -180,6 +180,12 @@ export const mission = {
       if (e.dead) continue;
       const d = e.pos.distanceTo(pos);
       if (d < radius) e.damage(dmg * (1 - d / radius) * 1.4, false);
+    }
+    // Armour shrugs off grenades; rockets and shells do full damage
+    for (const tk of G.tanks) {
+      if (tk.dead || tk === source) continue;
+      const d = tk.distTo(pos);
+      if (d < radius) tk.damage(dmg * (1 - d / radius) * (antiTank ? 1 : 0.2));
     }
     this.noise(pos, 90);
     for (const b of G.barrels) {
@@ -203,6 +209,8 @@ export const mission = {
     for (const e of G.enemies) if (!e.dead) e.reset();
     for (const g of G.grenades) G.scene.remove(g.mesh);
     G.grenades.length = 0;
+    for (const p of G.projectiles) G.scene.remove(p.mesh);
+    G.projectiles.length = 0;
     G.player.respawn(c.x, c.z, c.yaw);
     if (this.phase === 'base') { this.updateObjective(); G.hud.setEnemyCount(this.baseLeft()); }
   },
