@@ -15,13 +15,17 @@ Game: Three.js r0.169 static site, ES modules in js/, CDN importmap, no bundler.
 
 ## Tasks
 
-- T1 [S1,S3,S4,S6,S7,S8] Vendor the trimmed asset (assets/models/soldier.glb + LICENSE), add js/soldiers.js (loader, faction dressing, weapon and muzzle, animation controller), load it in main.js. Route: worker. Commit: -
-- T2 [S2,S4] Wire enemies.js to the controller (locomotion, aim layer, hit, death, muzzle). Route: worker. Commit: -
-- T3 [S5] Intro seated troops and stand-up, HQ allies idle. Route: worker. Commit: -
-- T4 [S7,S8] Remove the dead box builder and poseSoldier, README, visual and FPS verification. Route: worker + parent check. Commit: -
+- T1 [S1,S3,S4,S6,S7,S8] Vendor the trimmed asset (assets/models/soldier.glb + LICENSE), add js/soldiers.js (loader, faction dressing, weapon and muzzle, animation controller), load it in main.js. Route: worker. Commit: 750f857 [done]
+- T2 [S2,S4] Wire enemies.js to the controller (locomotion, aim layer, hit, death, muzzle). Route: worker. Commit: 1ecd4f0 [done]
+- T3 [S5] Intro seated troops and stand-up, HQ allies idle. Route: worker. Commit: 71c8e38 [done]
+- T4 [S7,S8] Remove the dead box builder and poseSoldier, README, visual and FPS verification. Route: worker + parent check. Commit: ae1db39 [done]
 
 ## Log
 
 - L1 (user): "vamos con el A" — answering the choice between A (glTF real models, CC0 packs, skeleton and walk/aim/death animations) and B (improve the procedural models).
 - L2 (evidence): exploration map: hit detection is analytic and does not depend on meshes; createSoldier callers are enemies.js, intro.js:60-70, world.js:654-662; muzzle used in enemies.js fire(); about 30 meshes per box soldier.
 - L3 (decision): asset is the Toolbench Low-poly Squad Kit figure (CC0, rifle and sidearm grip clips, Socket_Hand_R / Socket_Head / Socket_Back). Materials: TeamColour, mE7C9A4 (skin), m2A3A44, m3D4750, m57646E. Height 1.8 m, origin at the feet. Clip durations: idle_rifle 2.4 s, walk_rifle 1.07 s, aim_rifle 1.6 s, die 2.33 s.
+- L4 (evidence, T1): soldier.glb 1,846,968 -> 325,036 bytes, 14 clips. Material map: TeamColour = cap/torso/upper arms/thighs (coat), mE7C9A4 = skin, m2A3A44 = goggles (dark), m3D4750 = straps/cuffs/boots, m57646E = forearms/shins (pants). Socket_Hand_R barrel axis is +X; aim/fire clips yaw the hips -34 deg, so split() folds the hips rotation into the spine for the upper-body layer. Preview checked by the parent: helmets seated, guns in hand, aim and walk+aim, die pose.
+- L5 (evidence, T2): base/gate screenshots show patrol, aim in combat, tracers from the gun, clamped corpse, reset stands again. Muzzle at aim 1 (height/forward/side m): rifle 1.21/0.94/0.01, smg 1.23/0.74/-0.03, officer pistol 1.40/0.68/-0.12. FPS play/base/gate 71/67/68 vs 77/70/69 baseline (headless, noisy).
+- L6 (evidence, T3): seated pose via applySeat bone slerp (thigh Euler [-1.45, 0, PI], shin [-1.5, 0, 0]), rifle across the lap, stand-up seat ramp 1.4 s smoothstep; HQ allies idle, mixers updated within 120 m. Parent viewed the seated cabin and HQ screenshots. FPS 64/68/70.
+- L7 (evidence, T4): box builder removed (grep proof: no caller left), README credits. All debug modes boot without page errors. GTAO with skinned meshes: mean 0.976, 3.3 % below 0.7. Load failure shows "Error: No se pudo cargar el modelo de soldado (assets/models/soldier.glb): Failed to fetch", no retry loop. FPS 90/89/89 vs 77/70/69 baseline (headless, noisy). rayHit/damage unchanged in the diff since 4d69105. Verdicts S1-S8 met.
