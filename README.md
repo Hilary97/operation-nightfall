@@ -1,7 +1,7 @@
 # Operation Nightfall — 1944
 
 A World War II first-person shooter that runs in the browser, built with **HTML, CSS and JavaScript** on top of [Three.js](https://threejs.org/).
-There are no image, model or audio files: every texture, model, animation and sound is generated in code at runtime.
+The soldiers use a rigged, animated glTF character (`assets/models/soldier.glb`, see [Credits](#credits)). Everything else is generated in code at runtime: there are no image or audio files, and every texture, vehicle, building, prop and sound is built by the scripts.
 The game's interface, dialogue and subtitles are in Spanish.
 
 **Play it:** https://operation-nightfall-cyan.vercel.app
@@ -71,7 +71,7 @@ Weapons: **M1911** pistol, **Thompson M1A1** (from the crash site crate), a **Sp
 - **World:** 900 × 900 m procedural terrain (fractal noise), about 2,000 instanced pines, 16,000 grass tufts, rocks and bushes.
 - **Lighting:** a moon with shadows, flickering fire lights, sweeping searchlights with volumetric beams, warm lamps and green signal flares.
 - **Effects:** pooled particle systems (fire, smoke, embers, sparks, blood, debris, explosions), travelling bullet tracers and muzzle flashes that light up the scene.
-- **Characters:** procedurally built and animated soldiers (Stahlhelm and M1 helmets, uniforms, weapons) with walking, aiming, flinching and dying animations.
+- **Characters:** a rigged glTF soldier (skeleton and animation clips) dressed per faction in code: recoloured uniforms, Stahlhelm and M1 helmets, and rifle, SMG or pistol in hand. Mixer-driven idle, walk, run, aim, hit reaction and death animations; the paratroopers are seated in the C-47 and the HQ allies idle.
 - **AI:** patrol, suspicion, combat and search states. Enemies use line-of-sight checks against a spatial-hash collision grid, react to gunfire and explosions, raise the alarm and take cover behind obstacles they bump into.
 - **Audio:** fully synthesized with the Web Audio API: gunshots, explosions, flak, a plane engine, wind, a siren, footsteps, a heartbeat, tinnitus, a music pad and a victory fanfare, with stereo panning and generated reverb.
 
@@ -87,7 +87,9 @@ js/player.js      Movement, weapons, first-person viewmodels, grenades, knife, d
 js/enemies.js     Soldier AI and the spawn table
 js/entities.js    Items, explosive barrels, grenades, drivable Kübelwagen
 js/mission.js     Objectives, checkpoints, alarm, explosions, victory
-js/models.js      Procedural soldiers, vehicles, C-47, V-2 rocket, trees
+js/models.js      Procedural vehicles, C-47, V-2 rocket, trees, helmets and weapon geometry
+js/soldiers.js    glTF soldier loader, faction dressing, weapons and animation controller
+assets/models/    soldier.glb and its CC0 license
 js/textures.js    Canvas-painted textures
 js/fx.js          Particles, tracers, flash lights, film shader, searchlight beams
 js/audio.js       Web Audio synthesis
@@ -109,6 +111,10 @@ Three.js loads from the jsDelivr CDN through an import map.
 Debug shortcuts for testing: `?debug=play` (skip the intro at the wake point), `?debug=base` (at the breach in the west wall), `?debug=gate` (in front of the main gate), `?debug=intro`.
 
 Cheats: `?god` (the player takes no damage) and `?ammo` (the magazine never empties). They combine with each other and with debug, e.g. `?god&ammo` or `?debug=play&god`.
+
+## Credits
+
+- **Soldier model and animations:** the figure from the [Low-poly Squad Kit](https://toolbenchdev.com/gamedev/cc0-game-assets/low-poly-squad-kit/) by Toolbench, released under **CC0 1.0** (public domain). The file in `assets/models/soldier.glb` is a trimmed copy; the license text is in `assets/models/LICENSE.txt`.
 
 ## Deploy
 

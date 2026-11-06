@@ -1,5 +1,4 @@
 import * as THREE from 'three';
-import { lerp } from './util.js';
 
 const G_CACHE = new Map();
 export function boxG(w, h, d) {
@@ -117,112 +116,6 @@ export function buildEnemyGun(weapon) {
     len = 0.17;
   }
   return { gun, len };
-}
-
-export function createSoldier(faction = 'axis', weapon = 'rifle') {
-  helmets();
-  const p = PAL[faction];
-  const coat = mat('coat-' + faction, { color: p.coat, roughness: 0.95 });
-  const pants = mat('pants-' + faction, { color: p.pants, roughness: 0.95 });
-  const helm = mat('helm-' + faction, { color: p.helmet, roughness: 0.55, metalness: 0.35, side: THREE.DoubleSide });
-  const gear = mat('gear-' + faction, { color: p.gear, roughness: 0.75 });
-  const boots = mat('boots-' + faction, { color: p.boots, roughness: 0.55 });
-  const skin = mat('skin', { color: 0xc08a68, roughness: 0.8 });
-  const dark = mat('eyes', { color: 0x111111 });
-  const steel = mat('gunsteel', { color: 0x23262b, roughness: 0.4, metalness: 0.8 });
-
-  const root = new THREE.Group();
-  root.rotation.order = 'YXZ';
-  const hips = new THREE.Group();
-  hips.position.y = 0.95;
-  root.add(hips);
-
-  const legs = [];
-  for (const s of [-1, 1]) {
-    const L = new THREE.Group();
-    L.position.x = s * 0.11;
-    hips.add(L);
-    part(boxG(0.17, 0.5, 0.2), pants, 0, -0.25, 0, L);
-    const K = new THREE.Group();
-    K.position.y = -0.5;
-    L.add(K);
-    part(boxG(0.15, 0.36, 0.17), faction === 'allied' ? pants : boots, 0, -0.18, 0, K);
-    part(boxG(0.16, 0.1, 0.28), boots, 0, -0.4, 0.05, K);
-    legs.push({ L, K });
-  }
-
-  const torso = new THREE.Group();
-  hips.add(torso);
-  part(boxG(0.44, 0.58, 0.26), coat, 0, 0.29, 0, torso);
-  if (faction !== 'allied') part(boxG(0.47, 0.2, 0.29), coat, 0, -0.06, 0, torso);
-  part(boxG(0.47, 0.06, 0.3), gear, 0, 0.05, 0, torso);
-  for (const x of [-0.13, 0, 0.13]) part(boxG(0.1, 0.1, 0.06), gear, x, 0.11, 0.16, torso);
-  part(boxG(0.05, 0.52, 0.29), gear, -0.11, 0.33, 0, torso);
-  part(boxG(0.05, 0.52, 0.29), gear, 0.11, 0.33, 0, torso);
-  if (faction === 'allied') part(boxG(0.34, 0.36, 0.16), gear, 0, 0.32, -0.2, torso);
-  else {
-    part(boxG(0.16, 0.14, 0.08), gear, 0.2, 0.0, -0.12, torso);
-    part(cylY(0.05, 0.16, 8), steel, -0.24, 0.02, -0.08, torso);
-  }
-
-  const head = new THREE.Group();
-  head.position.y = 0.6;
-  torso.add(head);
-  part(boxG(0.1, 0.08, 0.1), skin, 0, 0.02, 0, head);
-  part(boxG(0.2, 0.24, 0.22), skin, 0, 0.17, 0.01, head);
-  part(boxG(0.035, 0.022, 0.01), dark, -0.05, 0.19, 0.122, head, false);
-  part(boxG(0.035, 0.022, 0.01), dark, 0.05, 0.19, 0.122, head, false);
-  if (faction === 'officer') {
-    part(cylY(0.115, 0.07, 14, 0.145), helm, 0, 0.32, 0, head);
-    part(boxG(0.2, 0.015, 0.1), mat('visor', { color: 0x0a0a0a, roughness: 0.3 }), 0, 0.29, 0.13, head);
-  } else {
-    part(faction === 'allied' ? M1 : STAHL, helm, 0, 0.24, 0, head);
-  }
-
-  const arms = [];
-  for (const s of [-1, 1]) {
-    const S = new THREE.Group();
-    S.position.set(s * 0.28, 0.52, 0);
-    torso.add(S);
-    part(boxG(0.12, 0.32, 0.13), coat, 0, -0.15, 0, S);
-    const E = new THREE.Group();
-    E.position.y = -0.3;
-    S.add(E);
-    part(boxG(0.11, 0.28, 0.12), coat, 0, -0.14, 0, E);
-    part(boxG(0.09, 0.1, 0.1), skin, 0, -0.31, 0, E);
-    arms.push({ S, E });
-  }
-
-  const { gun, len } = buildEnemyGun(weapon);
-  gun.position.set(0.06, 0.34, 0.22);
-  torso.add(gun);
-  const muzzle = new THREE.Object3D();
-  muzzle.position.set(0, 0.03, len);
-  gun.add(muzzle);
-
-  return { root, hips, legs, torso, head, arms, gun, muzzle, phase: Math.random() * 6, weapon };
-}
-
-// Procedural animation: walk cycle plus a blend between low-ready and aiming.
-export function poseSoldier(s, dt, { move = 0, aim = 0, t = 0 }) {
-  s.phase += dt * Math.min(move, 4) * 3.4;
-  const amp = Math.min(1, move / 1.4);
-  const sw = Math.sin(s.phase) * 0.6 * amp;
-  s.legs[0].L.rotation.x = sw;
-  s.legs[1].L.rotation.x = -sw;
-  s.legs[0].K.rotation.x = Math.max(0, -Math.sin(s.phase)) * 0.9 * amp;
-  s.legs[1].K.rotation.x = Math.max(0, Math.sin(s.phase)) * 0.9 * amp;
-  s.hips.position.y = 0.95 - Math.abs(Math.sin(s.phase)) * 0.035 * amp;
-  const [L, R] = s.arms;
-  const pistol = s.weapon === 'pistol';
-  L.S.rotation.set(lerp(pistol ? 0.05 : -0.7, -1.35, aim), 0, lerp(pistol ? 0.08 : 0.35, 0.45, aim));
-  L.E.rotation.x = lerp(pistol ? -0.1 : -0.6, -0.15, aim);
-  R.S.rotation.set(lerp(-0.3, pistol ? -1.45 : -0.55, aim), 0, lerp(-0.15, pistol ? -0.15 : -0.3, aim));
-  R.E.rotation.x = lerp(-1.1, pistol ? -0.1 : -1.2, aim);
-  s.gun.rotation.x = lerp(0.55, 0, aim);
-  s.gun.position.y = lerp(0.24, 0.34, aim);
-  if (pistol) s.gun.position.set(lerp(0.2, 0.12, aim), lerp(0.05, 0.38, aim), lerp(0.08, 0.5, aim));
-  s.torso.rotation.x = Math.sin(t * 1.5 + s.phase) * 0.015;
 }
 
 // ---------------- Vehicles ----------------
