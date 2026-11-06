@@ -404,7 +404,8 @@ function debugStart(mode) {
   G.hud.hideScreens();
   G.vmPass.enabled = true;
   const P = G.player;
-  const spots = { play: [WAKE.x, WAKE.z, -0.6], base: [-80, 18, -1.5], gate: [0, 75, 0] };
+  // ride: next to the motorcycle with the documents taken; kaserne: outside the barracks' west gate
+  const spots = { play: [WAKE.x, WAKE.z, -0.6], base: [-80, 18, -1.5], gate: [0, 75, 0], ride: [38, 42.2, -Math.PI / 2], kaserne: [160, 45, -Math.PI / 2] };
   const s = spots[mode] || spots.play;
   P.reset(s[0], s[1], s[2]);
   P.giveWeapon(1, 120);
@@ -412,6 +413,7 @@ function debugStart(mode) {
   G.hud.showCompass(true);
   mission.phase = 'explore';
   G.hud.setObjective('Debug');
+  if (mode === 'ride' || mode === 'kaserne') { mission.phase = 'escape'; mission.takeIntel(); }
   G.state = 'play';
 }
 

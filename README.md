@@ -17,7 +17,8 @@ The game's interface, dialogue and subtitles are in Spanish.
 3. **The discovery.** A dirt trail leads away from the wreck. Follow it and you find a sign, *"Achtung! Sperrgebiet"*, and then searchlights. It is a **secret enemy rocket base**.
 4. **Clear the base.** Eliminate all 19 soldiers: tower riflemen, patrols, gate guards and officers. Stay out of the searchlights. If you get spotted, the alarm goes off and the whole base hunts you.
 5. **The intel.** Search the command bunker for the documents. They hold the rocket launch schedules and a map back to friendly lines.
-6. **Go home.** Steal the Kübelwagen in the motor pool and drive down the road (watch out for the roadblock) to **Allied HQ**, which fires green flares.
+6. **The Kaserne.** The map shows an armoured barracks to the east. Take the **BMW R75 motorcycle with sidecar** from the motor pool and ride the branch road to it. Behind its walls wait 15 soldiers, two watchtowers and **three Panzers** that track you with their turrets and fire high-explosive shells. Bullets only spark off their armour: find the **bazooka** in the sandbagged armoury on the west side (rocket crates lie around the yard) and the **minigun** on the nest in front of the east barrack. Destroy all three tanks.
+7. **Go home.** Take the Kübelwagen parked at the Kaserne's south gate and drive the road south to **Allied HQ**, which fires green flares.
 
 ## Controls
 
@@ -27,7 +28,8 @@ The game's interface, dialogue and subtitles are in Spanish.
 | Aim / fire / aim down sights | Mouse / left click / right click or hold `F` |
 | Hold breath (scoped only) | `Shift` while scoped |
 | Change scope magnification (sniper, while scoped) | Mouse wheel |
-| Reload / switch weapon | `R` / `1` `2` `3` `4` or mouse wheel |
+| Reload / switch weapon | `R` / `1` to `6` or mouse wheel |
+| Minigun | Hold fire: the barrels wind up for about half a second, then it fires |
 | Grenade / knife (silent kill on unaware enemies) | `G` / `V` |
 | Interact, pick up, enter or exit vehicle | `E` |
 | Drive | `W S` throttle, `A D` steer, `Space` brake |
@@ -40,6 +42,7 @@ Each weapon has its own working sights, aligned with the exact bullet path:
 - **M1911:** rear notch and front post with three white dots; line up the dots.
 - **Thompson M1A1:** rear peep ring with a front blade; put the blade tip in the centre of the ring.
 - **Kar98k:** iron sights: a tangent rear V-notch and a hooded front post; sit the post tip in the notch.
+- **Bazuca M1A1:** a rear peep and a front frame sight on top of the tube; the rocket flies straight, so aim at the hull.
 - **Springfield M1903A4 (sniper):** a long scope with a mil-dot reticle and two magnifications (8x and 12x). The mouse wheel switches between them while you are scoped; the current level is shown next to the lens. The rifle drifts noticeably while scoped (less when crouched, more when moving); hold `Shift` to steady it for a few seconds. Running out of breath makes the drift worse until you recover.
 
 Mouse sensitivity scales with the zoom, and aiming through the sights shrinks the bullet spread. Firing the rifles from the hip is inaccurate.
@@ -62,7 +65,7 @@ The game detects touch screens and shows on-screen controls. Play in landscape (
 
 Touch devices start on **Low** (*Bajos*) graphics (no grass, lighter shadows and resolution). You can raise it from the menu on powerful phones. Add `?touch` to the URL to force the touch controls on a desktop.
 
-Weapons: **M1911** pistol, **Thompson M1A1** (from the crash site crate), a **Springfield M1903A4** sniper rifle (in the same supply crate area, a few metres from the Thompson) and a **Kar98k** rifle (at the foot of the north-west watchtower).
+Weapons: **M1911** pistol, **Thompson M1A1** (from the crash site crate), a **Springfield M1903A4** sniper rifle (in the same supply crate area, a few metres from the Thompson), a **Kar98k** rifle (at the foot of the north-west watchtower), and in the Kaserne a **Bazuca M1A1** (slot 5, one rocket per load, the only weapon that really hurts tanks) and a **Minigun** (slot 6, a 200-round belt; it slows you down while you carry it).
 
 ## Graphics and tech
 
@@ -81,13 +84,15 @@ Weapons: **M1911** pistol, **Thompson M1A1** (from the crash site crate), a **Sp
 index.html        Page, HUD and menus
 css/style.css     1940s dossier-style UI
 js/main.js        Bootstrapping, render loop, post-processing, input, game states
-js/world.js       Terrain, forest, enemy base, crash site, roads, Allied HQ
+js/world.js       Terrain, forest, enemy base, Kaserne, crash site, roads, Allied HQ
 js/intro.js       C-47 opening cinematic and the fall
 js/player.js      Movement, weapons, first-person viewmodels, grenades, knife, driving
 js/enemies.js     Soldier AI and the spawn table
-js/entities.js    Items, explosive barrels, grenades, drivable Kübelwagen
+js/tanks.js       Enemy tanks: model, turret AI, cannon fire, wreck
+js/projectiles.js Bazooka rockets and tank shells
+js/entities.js    Items, explosive barrels, grenades, drivable motorcycle and Kübelwagen
 js/mission.js     Objectives, checkpoints, alarm, explosions, victory
-js/models.js      Procedural vehicles, C-47, V-2 rocket, trees, helmets and weapon geometry
+js/models.js      Procedural vehicles (Kübelwagen, BMW R75, trucks, jeep), C-47, V-2 rocket, trees, helmets and weapon geometry
 js/soldiers.js    glTF soldier loader, faction dressing, weapons and animation controller
 assets/models/    soldier.glb and its CC0 license
 js/textures.js    Canvas-painted textures
@@ -108,7 +113,7 @@ python3 -m http.server 8000
 
 Three.js loads from the jsDelivr CDN through an import map.
 
-Debug shortcuts for testing: `?debug=play` (skip the intro at the wake point), `?debug=base` (at the breach in the west wall), `?debug=gate` (in front of the main gate), `?debug=intro`.
+Debug shortcuts for testing: `?debug=play` (skip the intro at the wake point), `?debug=base` (at the breach in the west wall), `?debug=gate` (in front of the main gate), `?debug=ride` (next to the motorcycle with the documents already taken), `?debug=kaserne` (outside the Kaserne's west gate, same mission stage), `?debug=intro`.
 
 Cheats: `?god` (the player takes no damage) and `?ammo` (the magazine never empties). They combine with each other and with debug, e.g. `?god&ammo` or `?debug=play&god`.
 

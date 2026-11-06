@@ -1,15 +1,21 @@
 import * as THREE from 'three';
 import { G } from './state.js';
-import { H, ALLIED, BASE, baseDist, WRECK } from './world.js';
+import { H, ALLIED, BASE, baseDist, WRECK, KASERNE, KASERNE_Y } from './world.js';
 import { dropLoot } from './entities.js';
 import { rand } from './util.js';
 
-// Mission flow: wake -> explore -> base -> escape -> return -> done
+// Mission flow: wake -> explore -> base -> escape -> ride -> kaserne -> return -> done
+const KASERNE_POS = new THREE.Vector3(KASERNE.x, KASERNE_Y, KASERNE.z);
+const ARMOURY_POS = new THREE.Vector3(198, KASERNE_Y, 62);
 export const mission = {
   phase: 'intro',
   checkpoint: null,
   hintT: 0,
   saw: {},
+
+  tanksLeft() {
+    return G.tanks.filter((t) => !t.dead).length;
+  },
 
   baseLeft() {
     return G.enemies.filter((e) => e.group === 'base' && !e.dead).length;
@@ -60,6 +66,8 @@ export const mission = {
         G.hud.subtitle('Reflectores entre los árboles... Había un camino de tierra que salía del lugar del accidente.', 7);
       }
     }
+    if (this.phase === 'ride' && Math.hypot(P.pos.x - KASERNE.x, P.pos.z - KASERNE.z) < 75) this.discoverKaserne();
+    if (this.phase === 'kaserne' && this.saw.armoury !== true && P.weapons[4].owned) { this.saw.armoury = true; G.hud.setMarker(null); this.updateObjective(); }
     if (this.phase === 'return' && Math.hypot(P.pos.x - ALLIED.x, P.pos.z - ALLIED.z) < 22) this.victory();
   },
 
@@ -76,6 +84,58 @@ export const mission = {
 
   updateObjective() {
     if (this.phase === 'base') G.hud.setObjective(`Elimina a todos los soldados enemigos de la base — quedan ${this.baseLeft()}`);
+    if (this.phase === 'kaserne') {
+      const left = this.tanksLeft();
+      const hint = G.player.weapons[4].owned ? '' : ' · Busca armas pesadas en el depósito (oeste)';
+      G.hud.setObjective(`Destruye los tanques del cuartel — quedan ${left}${hint}`);
+    }
+  },
+
+  discoverKaserne() {
+    if (this.phase !== 'ride') return;
+    this.phase = 'kaserne';
+    this.setCheckpoint();
+    G.hud.notice('CUARTEL ENEMIGO', 'Punto de control alcanzado');
+    G.hud.subtitle('Panzers... Las balas no les harán nada. Tiene que haber armas pesadas en ese depósito.', 8);
+    if (this.tanksLeft() === 0) { this.kaserneCleared(); return; }
+    G.hud.setMarker(G.player.weapons[4].owned ? null : ARMOURY_POS);
+    this.updateObjective();
+  },
+
+  onTankAlert(tk) {
+    if (this.phase === 'ride') this.discoverKaserne();
+    this.alertTanks(tk.pos, 60);
+  },
+
+  // Tanks near a disturbance turn their guns onto the player's last position
+  alertTanks(pos, radius) {
+    for (const tk of G.tanks) {
+      if (tk.dead || tk.state === 'combat' || tk.pos.distanceTo(pos) > radius) continue;
+      tk.lastKnown.copy(G.player.aimPoint);
+      tk.lastSeenT = G.time;
+      tk.state = 'combat';
+    }
+  },
+
+  onTankDestroyed() {
+    G.stats.kills++;
+    G.hud.killfeed('Tanque destruido');
+    G.hud.notice('TANQUE DESTRUIDO', this.tanksLeft() ? `Quedan ${this.tanksLeft()}` : '');
+    if (this.phase === 'ride') this.discoverKaserne();
+    if (this.phase === 'kaserne') {
+      this.updateObjective();
+      if (this.tanksLeft() === 0) this.kaserneCleared();
+    }
+  },
+
+  kaserneCleared() {
+    this.phase = 'return';
+    G.hud.notice('BLINDADOS DESTRUIDOS', 'Punto de control alcanzado');
+    G.hud.setObjective('Toma el Kübelwagen junto a la puerta sur del cuartel y regresa al cuartel general aliado');
+    G.hud.subtitle('Esos Panzers ya no aplastarán a nadie. Hay un Kübelwagen en la puerta sur — el cuartel aliado está al sur por ese camino. Lanzarán bengalas verdes.', 9);
+    G.hud.setMarker(ALLIED);
+    G.world.flaresOn = true;
+    this.setCheckpoint();
   },
 
   onEnemyAlert(e) {
@@ -87,6 +147,10 @@ export const mission = {
         o.searchT = 15;
         o.alert = Math.max(o.alert, 0.6);
       }
+    }
+    if (e.group === 'kaserne') {
+      if (this.phase === 'ride') this.discoverKaserne();
+      this.alertTanks(e.pos, 60);
     }
     if (e.group === 'base') {
       if (this.phase === 'explore') this.discoverBase();
@@ -113,6 +177,7 @@ export const mission = {
     for (const o of G.enemies) {
       if (o.dead || o.state === 'combat') continue;
       if (Math.hypot(o.pos.x - pos.x, o.pos.z - pos.z) < radius) {
+        if (o.group === 'kaserne') this.alertTanks(o.pos, 60);
         o.setLast(new THREE.Vector3(pos.x + rand(-5, 5), pos.y, pos.z + rand(-5, 5)));
         o.state = 'search';
         o.searchT = 14;
@@ -152,14 +217,13 @@ export const mission = {
   },
 
   takeIntel() {
-    this.phase = 'return';
+    this.phase = 'ride';
     G.hud.notice('INFORMACIÓN ASEGURADA', 'Horarios de lanzamiento de cohetes y un mapa de la región');
-    G.hud.setObjective('Roba el Kübelwagen del parque de vehículos y regresa al cuartel general aliado');
-    G.hud.subtitle('Un mapa... El cuartel general aliado está al sureste, siguiendo el camino. Lanzarán bengalas verdes. Hora de volver a casa.', 8);
+    G.hud.setObjective('Toma la moto del parque de vehículos y dirígete al cuartel enemigo, al este por el camino');
+    G.hud.subtitle('Un mapa... Hay un cuartel blindado al este, sobre el camino. Si sus tanques siguen ahí, aplastarán el avance aliado. En el parque de vehículos hay una moto.', 9);
     G.player.hasCompass = true;
     G.hud.showCompass(true);
-    G.hud.setMarker(ALLIED);
-    G.world.flaresOn = true;
+    G.hud.setMarker(KASERNE_POS);
     this.setCheckpoint();
   },
 
@@ -207,12 +271,14 @@ export const mission = {
     G.flags.alarm = false;
     G.flags.alarmT = 0;
     for (const e of G.enemies) if (!e.dead) e.reset();
+    for (const tk of G.tanks) tk.reset();
     for (const g of G.grenades) G.scene.remove(g.mesh);
     G.grenades.length = 0;
     for (const p of G.projectiles) G.scene.remove(p.mesh);
     G.projectiles.length = 0;
     G.player.respawn(c.x, c.z, c.yaw);
     if (this.phase === 'base') { this.updateObjective(); G.hud.setEnemyCount(this.baseLeft()); }
+    if (this.phase === 'kaserne') this.updateObjective();
   },
 
   victory() {

@@ -441,7 +441,8 @@ export class Player {
     resolveCircle(this.pos, 0.38, this.pos.y, 1.7);
     for (const v of G.vehicles) {
       const dx = this.pos.x - v.pos.x, dz = this.pos.z - v.pos.z, d = Math.hypot(dx, dz);
-      if (d < 1.9 && d > 0.01) { this.pos.x = v.pos.x + (dx / d) * 1.9; this.pos.z = v.pos.z + (dz / d) * 1.9; }
+      const r = v.cfg.push;
+      if (d < r && d > 0.01) { this.pos.x = v.pos.x + (dx / d) * r; this.pos.z = v.pos.z + (dz / d) * r; }
     }
     this.pos.x = clamp(this.pos.x, -BOUND, BOUND);
     this.pos.z = clamp(this.pos.z, -BOUND, BOUND);
@@ -573,7 +574,7 @@ export class Player {
     let veh = null;
     for (const v of G.vehicles) if (Math.hypot(v.pos.x - this.pos.x, v.pos.z - this.pos.z) < 3.4) veh = v;
     this.vehTarget = best ? null : veh;
-    G.hud.prompt(best ? `[E] ${best.label}` : veh ? '[E] Conducir el Kübelwagen' : null);
+    G.hud.prompt(best ? `[E] ${best.label}` : veh ? `[E] Conducir ${veh.label}` : null);
   }
 
   interact() {

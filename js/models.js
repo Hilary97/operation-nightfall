@@ -170,6 +170,37 @@ export function createKubel() {
   return { root, wheels };
 }
 
+// BMW R75 with sidecar (sidecar on the right); front is +Z like the Kübelwagen
+export function createMotorcycle() {
+  const root = new THREE.Group();
+  root.rotation.order = 'YXZ';
+  const body = mat('kubel', { color: 0x6d6a52, roughness: 0.7, metalness: 0.25 });
+  const dark = mat('tire', { color: 0x141414, roughness: 0.9 });
+  const steel = mat('gunsteel', { color: 0x23262b, roughness: 0.4, metalness: 0.8 });
+  const seat = mat('seat', { color: 0x3b2b1e, roughness: 0.8 });
+  part(boxG(0.26, 0.22, 0.6), body, 0, 0.82, 0.2, root);
+  part(boxG(0.18, 0.12, 1.2), steel, 0, 0.55, 0, root);
+  for (const s of [-1, 1]) part(cylY(0.07, 0.36, 10).rotateZ(Math.PI / 2), steel, s * 0.22, 0.5, 0.25, root);
+  part(boxG(0.24, 0.08, 0.36), seat, 0, 0.92, -0.25, root);
+  part(boxG(0.22, 0.06, 0.3), seat, 0, 0.82, -0.68, root);
+  part(boxG(0.7, 0.04, 0.04), steel, 0, 1.12, 0.62, root);
+  for (const s of [-1, 1]) part(boxG(0.04, 0.55, 0.04), steel, s * 0.07, 0.75, 0.72, root).rotation.x = -0.3;
+  part(boxG(0.2, 0.06, 0.5), body, 0, 0.75, 0.75, root);
+  part(boxG(0.2, 0.06, 0.5), body, 0, 0.75, -0.75, root);
+  const head = part(cylZ(0.09, 0.1, 10), steel, 0, 0.98, 0.78, root);
+  const lens = new THREE.Mesh(new THREE.CircleGeometry(0.075, 12), new THREE.MeshStandardMaterial({ color: 0xfff2c0, emissive: 0x332a10 }));
+  lens.position.set(0, 0, 0.051);
+  head.add(lens);
+  // Sidecar tub, its frame and the spare wheel
+  part(boxG(0.62, 0.42, 1.5), body, 0.95, 0.62, -0.05, root);
+  part(boxG(0.5, 0.3, 0.35), body, 0.95, 0.66, 0.85, root).rotation.x = -0.6;
+  part(boxG(0.5, 0.12, 0.4), seat, 0.95, 0.88, -0.25, root);
+  part(boxG(0.8, 0.05, 0.05), steel, 0.5, 0.42, 0.4, root);
+  part(boxG(0.8, 0.05, 0.05), steel, 0.5, 0.42, -0.5, root);
+  const wheels = wheelSet(root, [[0, 0.35, 0.75, true], [0, 0.35, -0.75, false], [1.05, 0.32, -0.15, false]], 0.34, 0.14, dark, body);
+  return { root, wheels };
+}
+
 export function createJeep() {
   const root = new THREE.Group();
   const body = mat('jeep', { color: 0x4b5230, roughness: 0.75, metalness: 0.2 });

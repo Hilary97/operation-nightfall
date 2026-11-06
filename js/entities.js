@@ -273,10 +273,21 @@ export class Grenade {
   }
 }
 
-// ---------------- Drivable Kübelwagen ----------------
+// ---------------- Drivable vehicles ----------------
+// len: centre-to-axle distance for terrain pitch and collision probes; width: half track for roll;
+// probe: collision circle radius; push: how far the player is kept from the centre.
+const VEHICLES = {
+  kubel: { model: M.createKubel, name: 'KÜBELWAGEN', label: 'el Kübelwagen', maxSpeed: 24, accel: 9, len: 1.3, width: 0.8, probe: 0.95, push: 1.9, wheelR: 0.4 },
+  moto: { model: M.createMotorcycle, name: 'BMW R75', label: 'la moto con sidecar', maxSpeed: 27, accel: 11, len: 0.75, width: 0.55, probe: 0.8, push: 1.5, wheelR: 0.34 },
+};
+
 export class Vehicle {
-  constructor(x, z, yaw) {
-    const k = M.createKubel();
+  constructor(x, z, yaw, kind = 'kubel') {
+    const cfg = (this.cfg = VEHICLES[kind]);
+    this.kind = kind;
+    this.name = cfg.name;
+    this.label = cfg.label;
+    const k = cfg.model();
     M.setShadows(k.root);
     this.root = k.root;
     this.wheels = k.wheels;
@@ -292,8 +303,9 @@ export class Vehicle {
 
   blocked(x, z) {
     const fx = Math.sin(this.yaw), fz = Math.cos(this.yaw);
-    for (const o of [1.3, 0, -1.3]) {
-      if (overlapsCircle(x + fx * o, z + fz * o, 0.95, this.pos.y, 1.8)) return true;
+    const L = this.cfg.len;
+    for (const o of [L, 0, -L]) {
+      if (overlapsCircle(x + fx * o, z + fz * o, this.cfg.probe, this.pos.y, 1.8)) return true;
     }
     for (const tk of G.tanks) if (Math.hypot(tk.pos.x - x, tk.pos.z - z) < 4.2) return true;
     return false;
@@ -305,11 +317,11 @@ export class Vehicle {
       const ax = G.input.axis;
       const fwd = clamp((K.has('KeyW') ? 1 : 0) - (K.has('KeyS') ? 1 : 0) + ax.y, -1, 1);
       const st = clamp((K.has('KeyA') ? 1 : 0) - (K.has('KeyD') ? 1 : 0) - ax.x, -1, 1);
-      if (fwd > 0) this.speed += (this.speed < 0 ? 20 : 9) * dt;
+      if (fwd > 0) this.speed += (this.speed < 0 ? 20 : this.cfg.accel) * dt;
       else if (fwd < 0) this.speed -= (this.speed > 0 ? 20 : 6) * dt;
       else this.speed *= 1 - 0.9 * dt;
       if (K.has('Space')) this.speed *= 1 - 4 * dt;
-      this.speed = clamp(this.speed, -7, 24);
+      this.speed = clamp(this.speed, -7, this.cfg.maxSpeed);
       this.steer = lerp(this.steer, st * 0.55, Math.min(1, dt * 5));
       G.audio.setEngine(this.speed);
     } else {
@@ -329,13 +341,14 @@ export class Vehicle {
       }
     }
     const fx = Math.sin(this.yaw), fz = Math.cos(this.yaw), rx = Math.cos(this.yaw), rz = -Math.sin(this.yaw);
-    const hF = H(this.pos.x + fx * 1.3, this.pos.z + fz * 1.3), hB = H(this.pos.x - fx * 1.3, this.pos.z - fz * 1.3);
-    const hR = H(this.pos.x + rx * 0.8, this.pos.z + rz * 0.8), hL = H(this.pos.x - rx * 0.8, this.pos.z - rz * 0.8);
+    const L = this.cfg.len, Wd = this.cfg.width;
+    const hF = H(this.pos.x + fx * L, this.pos.z + fz * L), hB = H(this.pos.x - fx * L, this.pos.z - fz * L);
+    const hR = H(this.pos.x + rx * Wd, this.pos.z + rz * Wd), hL = H(this.pos.x - rx * Wd, this.pos.z - rz * Wd);
     this.pos.y = (hF + hB) / 2;
     this.root.position.copy(this.pos);
-    this.root.rotation.set(Math.atan2(hB - hF, 2.6), this.yaw, Math.atan2(hR - hL, 1.6));
+    this.root.rotation.set(Math.atan2(hB - hF, L * 2), this.yaw, Math.atan2(hR - hL, Wd * 2));
     for (const w of this.wheels) {
-      w.m.rotation.x += (this.speed * dt) / 0.4;
+      w.m.rotation.x += (this.speed * dt) / this.cfg.wheelR;
       if (w.front) w.g.rotation.y = this.steer;
     }
     if (this.occupied && Math.abs(this.speed) > 5) {
@@ -350,7 +363,9 @@ export class Vehicle {
 }
 
 export function spawnVehicles() {
-  G.vehicles.push(new Vehicle(40, 40, -Math.PI / 2));
+  // Motorcycle in the rocket base motor pool for the ride out; the Kübelwagen waits at the Kaserne's south gate
+  G.vehicles.push(new Vehicle(40, 40, -Math.PI / 2, 'moto'));
+  G.vehicles.push(new Vehicle(225, 66, 0, 'kubel'));
 }
 
 export function updateEntities(dt, t) {

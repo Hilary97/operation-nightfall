@@ -119,7 +119,7 @@ export class HUD {
     this.el.healthFill.classList.toggle('low', hp < 35);
     this.el.healthNum.textContent = hp;
     const w = P.w;
-    this.el.wname.textContent = P.inVehicle ? 'KÜBELWAGEN' : w.name;
+    this.el.wname.textContent = P.inVehicle ? P.inVehicle.name : w.name;
     this.el.mag.textContent = P.inVehicle ? '—' : w.mag;
     this.el.res.textContent = P.inVehicle ? '' : w.reserve;
     document.getElementById('ammo').classList.toggle('hidden', !!P.inVehicle);
