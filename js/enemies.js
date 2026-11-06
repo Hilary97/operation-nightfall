@@ -1,6 +1,6 @@
 import * as THREE from 'three';
 import { G } from './state.js';
-import { createSoldier, poseSoldier, setShadows } from './models.js';
+import { createSoldier } from './soldiers.js';
 import { hasLOS, resolveCircle, raySphere, rayCyl } from './collision.js';
 import { clamp, lerp, rand, wrapAngle } from './util.js';
 import { H, ROADBLOCK } from './world.js';
@@ -22,7 +22,6 @@ export class Enemy {
     this.wname = wpn;
     this.w = WEAPONS[wpn];
     this.s = createSoldier(this.kind === 'officer' ? 'officer' : 'axis', wpn);
-    setShadows(this.s.root);
     G.scene.add(this.s.root);
     this.elev = def.elev || 0;
     this.static = !!def.static;
@@ -57,10 +56,10 @@ export class Enemy {
     this.side = 1;
     this.strafe = false;
     this.reactT = 0;
-    this.flinch = 0;
     this.searchT = 0;
     this.deathT = 0;
     this.s.root.rotation.set(0, 0, 0);
+    this.s.anim.reset();
     this.updateModel(0, 0);
   }
 
@@ -187,6 +186,7 @@ export class Enemy {
     if (this.fireT > 0 || dist > this.w.range * 1.5) return;
     if (this.burstLeft <= 0) this.burstLeft = Math.round(rand(this.w.burst[0], this.w.burst[1]));
     this.fire(dist, tp);
+    this.s.anim.fire();
     this.burstLeft--;
     this.fireT = this.burstLeft > 0 ? this.w.rof : rand(this.w.gap[0], this.w.gap[1]);
   }
@@ -226,8 +226,8 @@ export class Enemy {
   damage(amount, head) {
     if (this.dead) return;
     this.hp -= amount;
-    this.flinch = 1;
     if (this.hp <= 0) { this.die(head); return; }
+    this.s.anim.hit();
     if (this.state !== 'combat') {
       this.setLast(G.player.aimPoint);
       this.enterCombat();
@@ -247,31 +247,22 @@ export class Enemy {
   die(head) {
     this.dead = true;
     this.deathT = 0;
+    this.s.anim.die();
     G.audio.thud(this.pos);
     G.mission.onEnemyKilled(this, head);
   }
 
   deathAnim(dt) {
-    if (this.deathT >= 1) return;
-    this.deathT = Math.min(1, this.deathT + dt * 2.3);
-    const e = this.deathT * this.deathT;
-    const r = this.s.root;
-    r.rotation.x = -Math.PI / 2 * 0.96 * e;
-    r.position.y = this.pos.y + 0.13 * e;
-    this.s.arms[0].S.rotation.x = lerp(this.s.arms[0].S.rotation.x, -2.6, e);
-    this.s.arms[1].S.rotation.x = lerp(this.s.arms[1].S.rotation.x, -2.4, e);
-    this.s.legs[0].L.rotation.x = lerp(this.s.legs[0].L.rotation.x, 0.2, e);
+    if (this.deathT >= 3) return;
+    this.deathT += dt;
+    this.s.anim.update(dt);
   }
 
-  updateModel(dt, t) {
+  updateModel(dt) {
     const r = this.s.root;
     r.position.copy(this.pos);
     r.rotation.y = this.yaw;
-    poseSoldier(this.s, dt, { move: this.move, aim: this.aim, t });
-    if (this.flinch > 0) {
-      this.flinch -= dt * 4;
-      this.s.torso.rotation.x = -Math.max(0, this.flinch) * 0.3;
-    }
+    this.s.anim.update(dt, { move: this.move, aim: this.aim });
   }
 
   rayHit(o, d, maxT) {
