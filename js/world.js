@@ -4,6 +4,7 @@ import { G } from './state.js';
 import { fbm, smooth, lerp, polyDist, rand, clamp } from './util.js';
 import { beamMaterial } from './fx.js';
 import * as M from './models.js';
+import { createSoldier } from './soldiers.js';
 
 // ---------------- Layout (meters; -Z is north) ----------------
 export const BASE = { minX: -70, maxX: 70, minZ: -55, maxZ: 55 };
@@ -311,6 +312,9 @@ export function buildWorld(T) {
 
   // --- Per-frame world animation ---
   W.update = (dt, t, camPos) => {
+    for (const a of W.alliedSoldiers) {
+      if (a.root.position.distanceToSquared(camPos) < 120 * 120) a.anim.update(dt, { move: 0, aim: 0 });
+    }
     sky.position.copy(camPos);
     moon.position.copy(camPos).addScaledVector(W.moonDir, 200);
     moon.target.position.copy(camPos);
@@ -653,10 +657,10 @@ function buildAllied(T, W) {
   W.fires.push({ pos: new THREE.Vector3(ax - 2, py + 0.3, az + 2), size: 0.6, rate: 16, acc: 0, seed: 6, base: 28, light: addFireLight(ax - 2, py + 1.5, az + 2, 28) });
   W.alliedSoldiers = [];
   for (const [dx, dz, ry] of [[-3.5, 1, 1.2], [-0.5, 3.8, 3], [1, 0, -1.6], [6, 16, 3.5], [-8, -16, 0.2]]) {
-    const s = M.createSoldier('allied', 'rifle');
+    const s = createSoldier('allied', 'rifle');
     s.root.position.set(ax + dx, H(ax + dx, az + dz), az + dz);
     s.root.rotation.y = ry;
-    M.setShadows(s.root);
+    s.anim.update(0, { move: 0, aim: 0 });
     G.scene.add(s.root);
     W.alliedSoldiers.push(s);
   }

@@ -2,7 +2,25 @@ import * as THREE from 'three';
 import { G } from './state.js';
 import { Particles } from './fx.js';
 import * as M from './models.js';
+import { createSoldier } from './soldiers.js';
 import { rand, lerp, clamp } from './util.js';
+
+const SEAT_Y = -1.4;
+const STAND_Y = -1.0;
+const smoothstep = (x) => x * x * (3 - 2 * x);
+
+// The figure has no sit clip: after the mixer update, blend the leg bones towards a seated pose.
+// Each entry is the absolute local Euler (XYZ) rotation of the bone; w = 1 is fully seated.
+const SIT_POSE = { UpperLeg_L: [-1.45, 0, Math.PI], UpperLeg_R: [-1.45, 0, Math.PI], LowerLeg_L: [-1.5, 0, 0], LowerLeg_R: [-1.5, 0, 0] };
+const _t = new THREE.Quaternion(), _e = new THREE.Euler();
+function applySeat(bones, w) {
+  if (w <= 0) return;
+  for (const name in SIT_POSE) {
+    const b = bones[name];
+    _t.setFromEuler(_e.set(...SIT_POSE[name]));
+    b.quaternion.slerp(_t, w);
+  }
+}
 
 // Opening cinematic: inside a C-47 over Normandy, flak, the plane is hit,
 // the player is thrown out and falls through the clouds.
@@ -57,18 +75,11 @@ export class Intro {
     this.troops = [];
     for (let i = 0; i < 10; i++) {
       const side = i % 2 ? 1 : -1, z = -4.6 + Math.floor(i / 2) * 1.9 + (side > 0 ? 0.6 : 0);
-      const tr = M.createSoldier('allied', 'rifle');
-      tr.root.position.set(side * 1.2, -1.36, z);
+      const tr = createSoldier('allied', 'rifle');
+      tr.root.position.set(side * 1.2, SEAT_Y, z);
       tr.root.rotation.y = side > 0 ? -Math.PI / 2 : Math.PI / 2;
-      for (const l of tr.legs) { l.L.rotation.x = -1.5; l.K.rotation.x = 1.45; }
-      tr.arms.forEach((a) => { a.S.rotation.x = -0.5; a.E.rotation.x = -0.9; });
-      tr.gun.rotation.x = -1.1;
-      tr.gun.position.set(0.05, 0.05, 0.35);
-      tr.head.rotation.x = rand(-0.1, 0.25);
-      tr.head.rotation.y = rand(-0.4, 0.4);
-      M.setShadows(tr.root);
       s.add(tr.root);
-      this.troops.push({ tr, side, z, seed: Math.random() * 9 });
+      this.troops.push({ tr, side, z, seed: Math.random() * 9, seat: 1, nod: rand(-0.1, 0.25), turn: rand(-0.4, 0.4) });
     }
 
     // Windows and jump door
@@ -245,15 +256,20 @@ export class Intro {
       if (Math.random() < 0.15) this.cabinFx.emit('spark', new THREE.Vector3(1.45, 0.3, 1.5), { count: 3, speed: 4 });
     }
     this.cabinFx.update(dt);
-    for (const { tr, side, z, seed } of this.troops) {
+    for (const tp of this.troops) {
+      const { tr, side, z, seed } = tp;
       if (this.standUp) {
-        tr.root.position.y = lerp(tr.root.position.y, 0.0 - 1.0, dt * 2);
-        for (const l of tr.legs) { l.L.rotation.x = lerp(l.L.rotation.x, 0, dt * 3); l.K.rotation.x = lerp(l.K.rotation.x, 0, dt * 3); }
+        tp.seat = Math.max(0, tp.seat - dt / 1.4);
+        tr.root.position.y = lerp(tr.root.position.y, STAND_Y, dt * 2);
         tr.root.rotation.y = lerp(tr.root.rotation.y, Math.PI, dt * 1.5);
         tr.root.position.x = lerp(tr.root.position.x, side * 0.45, dt * 1.2);
       }
+      tr.anim.update(dt, { move: 0, aim: 0 });
+      applySeat(tr.bones, smoothstep(tp.seat));
+      tr.bones.Head.rotation.x += tp.nod * tp.seat;
+      tr.bones.Head.rotation.y += tp.turn * tp.seat;
       tr.root.position.z = z + Math.sin(t * 2 + seed) * 0.01;
-      tr.head.rotation.z = Math.sin(t * 3 + seed) * this.shake * 0.4;
+      tr.bones.Head.rotation.z += Math.sin(t * 3 + seed) * this.shake * 0.4;
     }
     this.roll = lerp(this.roll, 0, dt * 0.25);
     const s = this.shake;
