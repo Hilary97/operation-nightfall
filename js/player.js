@@ -409,7 +409,8 @@ export class Player {
     }
 
     // Weapon state
-    this.ads = lerp(this.ads, I.mouse.right && !this.sprinting && this.reloadT <= 0 ? 1 : 0, Math.min(1, dt * 12));
+    const wantAim = I.mouse.right || K.has('KeyF');
+    this.ads = lerp(this.ads, wantAim && !this.sprinting && this.reloadT <= 0 ? 1 : 0, Math.min(1, dt * 12));
     this.scopeK = this.w.scope ? clamp((this.ads - 0.75) / 0.2, 0, 1) : 0;
     this.updateBreath(dt, K);
     this.updateAimSway(dt, t);
@@ -438,7 +439,7 @@ export class Player {
     const busy = this.switchT > 0 || this.reloadT > 0 || this.throwT > 0 || this.meleeT > 0 || this.sprinting;
     if (!busy && this.fireCd <= 0 && (this.w.auto ? I.mouse.left || I.mouse.clicked : I.mouse.clicked)) this.fire();
     if (Pr.has('KeyG') && this.grenades > 0 && this.throwT <= 0) this.throwGrenade();
-    if ((Pr.has('KeyV') || Pr.has('KeyF')) && this.meleeT <= 0) this.melee();
+    if (Pr.has('KeyV') && this.meleeT <= 0) this.melee();
     if (Pr.has('KeyE')) this.interact();
 
     // Health regen

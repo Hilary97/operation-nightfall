@@ -24,7 +24,7 @@ The game's interface, dialogue and subtitles are in Spanish.
 | Action | Key |
 | --- | --- |
 | Move / sprint / crouch / jump | `W A S D` / `Shift` / `C` / `Space` |
-| Aim / fire / aim down sights | Mouse / left click / right click |
+| Aim / fire / aim down sights | Mouse / left click / right click or hold `F` |
 | Hold breath (scoped only) | `Shift` while scoped |
 | Change scope magnification (sniper, while scoped) | Mouse wheel |
 | Reload / switch weapon | `R` / `1` `2` `3` `4` or mouse wheel |
