@@ -16,7 +16,7 @@ Workers read until `## Log`.
 - T2 [S3] Tanks: model, turret AI, cannon shells, explosion-only damage, wreck. Route: inline. Commit: 41b5b25
 - T3 [S1, S2, S4] Barracks world: layout, roads, soldiers, tank placement, weapon pickups. Route: inline. Commit: 8b78e48
 - T4 [S5, S6, S7] Motorcycle vehicle, Kübelwagen moved to the barracks, mission flow, HUD vehicle name, help/README/debug spot. Route: inline. Commit: a711e2b
-- T5 [all] Headless smoke run + independent verify (Risk: item 6). Route: verify. Commit: pending
+- T5 [all] Headless smoke run + independent verify (Risk: item 6). Route: verify. Commit: evidence only (L7)
 
 ## Log
 - L1 (user, verbatim): "vamos a agregar nueva funcionalidad en el juego. Necesito que haya un nuevo cuartel en ese cuartel, va a haber más soldados tanques de guer donde en el cuartel, va a haber lugares donde puedas encontrar lanza, misiles y metralletas mini ningún en ese cuartel te necesitas encontrar La ubicación del cuartel que ya está implementado, pero para trasladarse, pues moverte en moto y después en el carro."
@@ -39,3 +39,8 @@ Workers read until `## Log`.
   - The prompt reads "[E] Conducir el Kübelwagen". Reaching Allied HQ ends the mission (done/victory).
   - Screenshots of the moto in the motor pool and the Kübelwagen at the south gate looked right. No console errors.
   - The debug ride spot was moved to (38,42.2) because the moto was out of the 3.4 m interact reach.
+- L7 (independent verify): PASS on S1-S7.
+  - Regression checks against main, with deterministic Math.random: hitscan damage for the 4 old weapons, grenade and barrel explosions, the base alarm, the roadblock, Kübelwagen physics and Allied HQ victory are all identical.
+  - Terrain: at 24,497 points far from the Kaserne and ROAD2/3 the largest height difference is 7e-15 m.
+  - Advisory: ROAD3, like main's ROAD, grazes an HQ sandbag. Victory needs driving round to the south opening or walking in. This was there before the feature.
+  - Advisory: tank shells damage other tanks at full strength. Rare.
