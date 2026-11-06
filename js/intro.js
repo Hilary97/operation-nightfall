@@ -264,7 +264,7 @@ export class Intro {
         tr.root.rotation.y = lerp(tr.root.rotation.y, Math.PI, dt * 1.5);
         tr.root.position.x = lerp(tr.root.position.x, side * 0.45, dt * 1.2);
       }
-      tr.anim.update(dt, { move: 0, aim: 0 });
+      tr.anim.update(dt);
       applySeat(tr.bones, smoothstep(tp.seat));
       tr.bones.Head.rotation.x += tp.nod * tp.seat;
       tr.bones.Head.rotation.y += tp.turn * tp.seat;

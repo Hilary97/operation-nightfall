@@ -12,6 +12,7 @@ const WEAPONS = {
 };
 
 const _v = new THREE.Vector3(), _v2 = new THREE.Vector3();
+const _anim = { move: 0, aim: 0, d2: 0 };
 
 export class Enemy {
   constructor(def) {
@@ -58,6 +59,7 @@ export class Enemy {
     this.reactT = 0;
     this.searchT = 0;
     this.deathT = 0;
+    this.d2 = 0;
     this.s.root.rotation.set(0, 0, 0);
     this.s.anim.reset();
     this.updateModel(0, 0);
@@ -74,6 +76,7 @@ export class Enemy {
     const tp = P.aimPoint;
     this.eye.set(this.pos.x, this.pos.y + 1.6, this.pos.z);
     const dx = tp.x - this.pos.x, dz = tp.z - this.pos.z, dist = Math.hypot(dx, dz);
+    this.d2 = dist * dist;
 
     // Perception (throttled line-of-sight checks)
     this.losT -= dt;
@@ -262,7 +265,10 @@ export class Enemy {
     const r = this.s.root;
     r.position.copy(this.pos);
     r.rotation.y = this.yaw;
-    this.s.anim.update(dt, { move: this.move, aim: this.aim });
+    _anim.move = this.move;
+    _anim.aim = this.aim;
+    _anim.d2 = this.d2;
+    this.s.anim.update(dt, _anim);
   }
 
   rayHit(o, d, maxT) {

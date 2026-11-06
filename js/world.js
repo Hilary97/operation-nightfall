@@ -43,6 +43,7 @@ G.H = H;
 
 // ---------------- Helpers ----------------
 let MATS;
+const _allyAnim = { move: 0, aim: 0, d2: 0 };
 function addBlock(w, h, d, material, x, y, z, { ry = 0, collide = true, cast = true, tile = 2, flags = {} } = {}) {
   const m = new THREE.Mesh(M.scaledBox(w, h, d, tile), material);
   m.position.set(x, y + h / 2, z);
@@ -313,7 +314,8 @@ export function buildWorld(T) {
   // --- Per-frame world animation ---
   W.update = (dt, t, camPos) => {
     for (const a of W.alliedSoldiers) {
-      if (a.root.position.distanceToSquared(camPos) < 120 * 120) a.anim.update(dt, { move: 0, aim: 0 });
+      const d2 = a.root.position.distanceToSquared(camPos);
+      if (d2 < 120 * 120) { _allyAnim.d2 = d2; a.anim.update(dt, _allyAnim); }
     }
     sky.position.copy(camPos);
     moon.position.copy(camPos).addScaledVector(W.moonDir, 200);
@@ -660,7 +662,7 @@ function buildAllied(T, W) {
     const s = createSoldier('allied', 'rifle');
     s.root.position.set(ax + dx, H(ax + dx, az + dz), az + dz);
     s.root.rotation.y = ry;
-    s.anim.update(0, { move: 0, aim: 0 });
+    s.anim.update(0);
     G.scene.add(s.root);
     W.alliedSoldiers.push(s);
   }
