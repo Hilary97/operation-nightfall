@@ -316,6 +316,22 @@ const DEFS = [
   { x: ROADBLOCK.x + 3, z: ROADBLOCK.z + 1, static: true, kind: 'smg', group: 'road', yaw: -2.2 },
   { x: ROADBLOCK.x - 5, z: ROADBLOCK.z + 4, kind: 'rifle', group: 'road', yaw: 0.8, patrol: [[ROADBLOCK.x - 5, ROADBLOCK.z + 4], [ROADBLOCK.x + 6, ROADBLOCK.z - 6]] },
   { x: ROADBLOCK.x + 1, z: ROADBLOCK.z - 6, static: true, kind: 'smg', group: 'road', yaw: 0.9 },
+  // Enemy barracks (Kaserne): towers, gates, patrols and the garrison
+  { x: 186, z: 21, elev: 5.25, static: true, kind: 'rifle', group: 'kaserne', yaw: -2.2 },
+  { x: 254, z: 69, elev: 5.25, static: true, kind: 'rifle', group: 'kaserne', yaw: -1.6 },
+  { x: 176, z: 41, static: true, kind: 'rifle', group: 'kaserne', yaw: -Math.PI / 2 },
+  { x: 176, z: 49, static: true, kind: 'smg', group: 'kaserne', yaw: -Math.PI / 2 },
+  { x: 214, z: 79, static: true, kind: 'rifle', group: 'kaserne', yaw: 0 },
+  { x: 226, z: 79, static: true, kind: 'smg', group: 'kaserne', yaw: 0.2 },
+  { x: 185, z: 33, kind: 'smg', group: 'kaserne', patrol: [[185, 33], [255, 33]] },
+  { x: 205, z: 54, kind: 'rifle', group: 'kaserne', patrol: [[205, 54], [255, 54]] },
+  { x: 175, z: 10, kind: 'rifle', group: 'kaserne', patrol: [[175, 10], [265, 10], [265, 80], [232, 80], [208, 80], [175, 80]] },
+  { x: 215, z: 36, kind: 'rifle', group: 'kaserne', yaw: 0.3 },
+  { x: 226, z: 37, kind: 'smg', group: 'kaserne', yaw: -0.4 },
+  { x: 236, z: 66, kind: 'smg', group: 'kaserne', yaw: 2.6 },
+  { x: 205, z: 61, kind: 'rifle', group: 'kaserne', yaw: 1.4 },
+  { x: 244, z: 34, kind: 'officer', group: 'kaserne', yaw: 0.6 },
+  { x: 205, z: 33, kind: 'rifle', group: 'kaserne', yaw: 2.9 },
 ];
 
 export function spawnEnemies() {

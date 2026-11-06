@@ -14,7 +14,7 @@ import { Grid } from './collision.js';
 import { buildWorld, WAKE, BASE, H } from './world.js';
 import { spawnItems, spawnBarrels, spawnVehicles, updateEntities } from './entities.js';
 import { spawnEnemies, updateEnemies } from './enemies.js';
-import { updateTanks } from './tanks.js';
+import { spawnTanks, updateTanks } from './tanks.js';
 import { mission } from './mission.js';
 import { Player } from './player.js';
 import { HUD } from './hud.js';
@@ -66,6 +66,7 @@ async function init() {
   spawnBarrels();
   spawnVehicles();
   spawnEnemies();
+  spawnTanks();
   setLoad(85, 'Compilando shaders…');
   await nextFrame();
 

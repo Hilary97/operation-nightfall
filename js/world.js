@@ -14,22 +14,34 @@ export const ALLIED = new THREE.Vector3(250, 0, 330);
 export const ROAD = [[0, 58], [0, 92], [28, 130], [78, 162], [128, 200], [168, 248], [212, 292], [246, 318]];
 export const TRAIL = [[-135, 152], [-120, 126], [-108, 100], [-98, 75], [-88, 50], [-80, 28], [-73, 17]];
 export const ROADBLOCK = new THREE.Vector3(128, 0, 200);
+// Enemy barracks (Kaserne) east of the rocket base: a branch road from the base gate, an exit road to Allied HQ
+export const KASERNE = { minX: 180, maxX: 260, minZ: 15, maxZ: 75, x: 220, z: 45 };
+export const ROAD2 = [[0, 92], [55, 98], [110, 88], [150, 66], [172, 46], [184, 45]];
+export const ROAD3 = [[220, 79], [226, 140], [236, 220], [244, 290], [250, 318]];
 export const BOUND = 405;
 
 function rawLow(x, z) { return (fbm(x * 0.005 + 11.3, z * 0.005 + 7.1) - 0.5) * 42; }
 function rawHi(x, z) { return (fbm(x * 0.035 + 3.7, z * 0.035 + 9.2) - 0.5) * 5; }
 const ALLIED_Y = rawLow(ALLIED.x, ALLIED.z);
+export const KASERNE_Y = rawLow(KASERNE.x, KASERNE.z);
 
 export function baseDist(x, z) {
   const dx = Math.max(BASE.minX - x, 0, x - BASE.maxX), dz = Math.max(BASE.minZ - z, 0, z - BASE.maxZ);
   return Math.hypot(dx, dz);
 }
 
+export function kaserneDist(x, z) {
+  const dx = Math.max(KASERNE.minX - x, 0, x - KASERNE.maxX), dz = Math.max(KASERNE.minZ - z, 0, z - KASERNE.maxZ);
+  return Math.hypot(dx, dz);
+}
+
+const roadDist = (x, z) => Math.min(polyDist(ROAD, x, z), polyDist(ROAD2, x, z), polyDist(ROAD3, x, z));
+
 export function H(x, z) {
   let low = rawLow(x, z), hi = rawHi(x, z);
   const e = Math.max(Math.abs(x), Math.abs(z));
   low += smooth(330, 440, e) * 45;
-  const dr = Math.min(polyDist(ROAD, x, z), polyDist(TRAIL, x, z) + 2);
+  const dr = Math.min(roadDist(x, z), polyDist(TRAIL, x, z) + 2);
   hi *= smooth(2, 10, dr);
   const db = baseDist(x, z);
   low = lerp(0, low, smooth(2, 60, db));
@@ -37,6 +49,9 @@ export function H(x, z) {
   const da = Math.hypot(x - ALLIED.x, z - ALLIED.z);
   low = lerp(ALLIED_Y, low, smooth(25, 70, da));
   hi *= smooth(15, 40, da);
+  const dk = kaserneDist(x, z);
+  low = lerp(KASERNE_Y, low, smooth(2, 55, dk));
+  hi *= smooth(0, 18, dk);
   return low + hi;
 }
 G.H = H;
@@ -201,10 +216,11 @@ export function buildWorld(T) {
     c.lerp(cDirt, smooth(0.55, 0.75, fbm(x * 0.02 + 40, z * 0.02)) * 0.7);
     const slope = Math.hypot(H(x + 1, z) - H(x - 1, z), H(x, z + 1) - H(x, z - 1)) / 2;
     c.lerp(cRock, smooth(0.45, 0.9, slope));
-    const dr = polyDist(ROAD, x, z);
+    const dr = roadDist(x, z);
     c.lerp(cRoad, smooth(5, 2.5, dr) * (0.8 + 0.2 * fbm(x * 0.3, z * 0.3)));
     c.lerp(cDirt, smooth(2.6, 1, polyDist(TRAIL, x, z)) * 0.85);
     c.lerp(cBase, smooth(3, 0, baseDist(x, z)) * 0.9);
+    c.lerp(cBase, smooth(3, 0, kaserneDist(x, z)) * 0.9);
     c.lerp(cBurnt, smooth(16, 4, Math.hypot(x - WRECK.x, z - WRECK.z)));
     cols[i * 3] = c.r; cols[i * 3 + 1] = c.g; cols[i * 3 + 2] = c.b;
   }
@@ -215,7 +231,7 @@ export function buildWorld(T) {
   scene.add(terrain);
 
   const reserved = (x, z, pad = 0) =>
-    baseDist(x, z) < 16 + pad || polyDist(ROAD, x, z) < 7 + pad || polyDist(TRAIL, x, z) < 3 + pad ||
+    baseDist(x, z) < 16 + pad || kaserneDist(x, z) < 14 + pad || roadDist(x, z) < 7 + pad || polyDist(TRAIL, x, z) < 3 + pad ||
     Math.hypot(x - ALLIED.x, z - ALLIED.z) < 48 + pad || Math.hypot(x - WRECK.x, z - WRECK.z) < 13 + pad ||
     Math.hypot(x - WAKE.x, z - WAKE.z) < 3 + pad || Math.hypot(x - ROADBLOCK.x, z - ROADBLOCK.z) < 14 + pad;
 
@@ -295,7 +311,7 @@ export function buildWorld(T) {
     let k = 0;
     while (k < N) {
       const x = rand(-260, 300), z = rand(-120, 380);
-      if (baseDist(x, z) < 2 || polyDist(ROAD, x, z) < 3) continue;
+      if (baseDist(x, z) < 2 || kaserneDist(x, z) < 2 || roadDist(x, z) < 3) continue;
       const s = rand(0.6, 1.4);
       mtx.compose(pv.set(x, H(x, z) - 0.05, z), q.setFromAxisAngle(new THREE.Vector3(0, 1, 0), rand(0, 6)), sv.set(s, s, s));
       grass.setMatrixAt(k, mtx);
@@ -310,6 +326,7 @@ export function buildWorld(T) {
   buildWreck(T, W);
   buildTrailAndRoad(T, W);
   buildAllied(T, W);
+  buildKaserne(T, W);
 
   // --- Per-frame world animation ---
   W.update = (dt, t, camPos) => {
@@ -629,6 +646,76 @@ function buildTrailAndRoad(T, W) {
   crate(rx - 6, rz - 3);
   crate(rx - 6.2, rz - 1.7);
   W.fires.push({ pos: new THREE.Vector3(rx - 2, H(rx - 2, rz + 2) + 0.5, rz + 2), size: 0.45, rate: 14, acc: 0, seed: 5, base: 0 });
+}
+
+// ---------------- Enemy barracks (Kaserne) ----------------
+function buildKaserne(T, W) {
+  const K = KASERNE, ky = KASERNE_Y;
+  const { concrete, planks, darkMetal, wire } = MATS;
+  const wallH = 3, th = 0.6;
+  const wallX = (x0, x1, z) => {
+    addBlock(x1 - x0, wallH, th, concrete, (x0 + x1) / 2, ky, z, { tile: 3 });
+    for (let x = x0; x <= x1; x += 8) addBlock(0.8, wallH + 0.4, 0.8, concrete, x, ky, z, { tile: 3 });
+    for (const dy of [0.2, 0.45]) addMesh(M.boxG(x1 - x0, 0.03, 0.03), wire, (x0 + x1) / 2, ky + wallH + dy, z, { cast: false });
+  };
+  const wallZ = (z0, z1, x) => {
+    addBlock(th, wallH, z1 - z0, concrete, x, ky, (z0 + z1) / 2, { tile: 3 });
+    for (let z = z0; z <= z1; z += 8) addBlock(0.8, wallH + 0.4, 0.8, concrete, x, ky, z, { tile: 3 });
+    for (const dy of [0.2, 0.45]) addMesh(M.boxG(0.03, 0.03, z1 - z0), wire, x, ky + wallH + dy, (z0 + z1) / 2, { cast: false });
+  };
+  // Gates: west (from the base road) and south (towards Allied HQ)
+  wallX(K.minX, K.maxX, K.minZ);
+  wallX(K.minX, K.x - 6, K.maxZ);
+  wallX(K.x + 6, K.maxX, K.maxZ);
+  wallZ(K.minZ, K.z - 6, K.minX);
+  wallZ(K.z + 6, K.maxZ, K.minX);
+  wallZ(K.minZ, K.maxZ, K.maxX);
+  for (const z of [K.z - 6.3, K.z + 6.3]) addBlock(1.2, 4.2, 1.2, concrete, K.minX, ky, z, { tile: 2 });
+  for (const x of [K.x - 6.3, K.x + 6.3]) addBlock(1.2, 4.2, 1.2, concrete, x, ky, K.maxZ, { tile: 2 });
+
+  // Two barrack blocks along the north wall
+  for (const bx of [200, 240]) {
+    const bz = 25;
+    addBlock(22, 3.2, 9, planks, bx, ky, bz, { tile: 3 });
+    roof(23, 10, 2.4, bx, ky + 3.2, bz);
+    for (let i = 0; i < 4; i++) addMesh(new THREE.PlaneGeometry(1.1, 0.8), MATS.windowGlow, bx - 7.5 + i * 5, ky + 1.9, bz + 4.52, { cast: false });
+    addMesh(M.boxG(1.3, 2.2, 0.1), MATS.wood, bx + 9, ky + 1.1, bz + 4.52, { cast: false });
+  }
+  // Tank shed: a metal roof on posts
+  for (const [x, z] of [[232, 58], [248, 58], [232, 71], [248, 71]]) addBlock(0.3, 4.6, 0.3, darkMetal, x, ky, z, { tile: 1 });
+  const shed = addMesh(new THREE.PlaneGeometry(17, 14), MATS.metal, 240, ky + 4.6, 64.5);
+  shed.rotation.x = -Math.PI / 2;
+  // Armoury depot: a sandbagged weapons dump under canvas
+  sandbags(198, 62, 4.2, Math.PI * 0.65, Math.PI * 2.35, 9);
+  for (const [x, z] of [[195, 59], [201, 59], [195, 65], [201, 65]]) addBlock(0.18, 3.2, 0.18, MATS.wood, x, ky, z, { tile: 1, collide: false });
+  const tarp = addMesh(new THREE.PlaneGeometry(7.5, 7.5), MATS.canvas, 198, ky + 3.2, 62);
+  tarp.rotation.x = -Math.PI / 2 + 0.05;
+  for (const [x, z] of [[196, 64.6], [197.3, 64.7], [200.4, 60]]) crate(x, z);
+  // Minigun nest in front of the east barrack
+  sandbags(240, 33, 2.6, -Math.PI * 0.45, Math.PI * 0.45, 5);
+  // Watchtowers on two corners
+  for (const [tx, tz] of [[186, 21], [254, 69]]) {
+    const h = 5;
+    for (const [lx, lz] of [[-1.3, -1.3], [1.3, -1.3], [-1.3, 1.3], [1.3, 1.3]]) addBlock(0.25, h, 0.25, MATS.wood, tx + lx, ky, tz + lz, { tile: 1 });
+    addBlock(3.2, 0.25, 3.2, planks, tx, ky + h, tz, { tile: 2 });
+    for (const [rx, rz, rw, rd] of [[0, -1.55, 3.2, 0.1], [0, 1.55, 3.2, 0.1], [-1.55, 0, 0.1, 3.2], [1.55, 0, 0.1, 3.2]]) addBlock(rw, 1, rd, planks, tx + rx, ky + h + 0.25, tz + rz, { tile: 1 });
+    const cap = addMesh(new THREE.ConeGeometry(2.6, 1.3, 4), MATS.roof, tx, ky + h + 3.2, tz);
+    cap.rotation.y = Math.PI / 4;
+    for (const [px, pz] of [[-1.45, -1.45], [1.45, -1.45], [-1.45, 1.45], [1.45, 1.45]]) addMesh(M.boxG(0.12, 2.4, 0.12), MATS.wood, tx + px, ky + h + 1.45, tz + pz);
+  }
+  // Lamp post in the yard and a fire drum by the south gate
+  addBlock(0.2, 6, 0.2, darkMetal, 220, ky, 45, { tile: 1 });
+  const l = new THREE.PointLight(0xffc070, 30, 40, 1.5);
+  l.position.set(220, ky + 5.8, 45);
+  G.scene.add(l);
+  const bulb = new THREE.Mesh(new THREE.SphereGeometry(0.15, 8, 6), new THREE.MeshBasicMaterial({ color: 0xffe0a0 }));
+  bulb.position.copy(l.position);
+  G.scene.add(bulb);
+  addMesh(M.cylY(0.35, 1, 12), darkMetal, 210, ky + 0.5, 68);
+  addCollider(209.6, 210.4, ky, ky + 1, 67.6, 68.4);
+  W.fires.push({ pos: new THREE.Vector3(210, ky + 1.1, 68), size: 0.5, rate: 18, acc: 0, seed: 7, base: 18, light: addFireLight(210, ky + 2, 68, 18) });
+  for (const [x, z] of [[215, 20], [216.2, 20.2], [255, 40], [255.2, 41.3], [186, 60]]) crate(x, z);
+  W.barrelSpots.push([233.5, 73], [246.5, 73], [212, 19.5], [256, 52]);
 }
 
 // ---------------- Allied HQ ----------------

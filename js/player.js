@@ -16,7 +16,7 @@ const WDEF = [
   { id: 'smg', name: 'Thompson M1A1', magSize: 30, reserve: 0, maxReserve: 240, rate: 0.088, auto: true, dmg: 25, spread: 0.03, adsSpread: 0.0055, kick: 0.013, reload: 2.3, sound: 'smg', noise: 65, range: 160, adsFov: 52 },
   { id: 'rifle', name: 'Kar98k', magSize: 5, reserve: 0, maxReserve: 50, rate: 1.15, auto: false, dmg: 125, spread: 0.03, adsSpread: 0.0012, kick: 0.06, reload: 2.8, sound: 'kar', noise: 90, range: 320, adsFov: 32, bolt: true },
   { id: 'sniper', name: 'Springfield M1903A4', magSize: 5, reserve: 0, maxReserve: 30, rate: 1.4, auto: false, dmg: 180, spread: 0.05, adsSpread: 0.0001, kick: 0.08, reload: 3.2, sound: 'kar', noise: 100, range: 600, adsFov: 9.4, bolt: true, scope: true, zooms: [9.4, 6.25], zoomNames: ['8×', '12×'], sway: 0.009, reticle: 'mildot' },
-  { id: 'bazooka', name: 'Bazooka M1A1', magSize: 1, reserve: 0, maxReserve: 8, rate: 0.8, auto: false, dmg: 0, spread: 0.01, adsSpread: 0.003, kick: 0.09, reload: 2.6, sound: 'bazooka', noise: 110, range: 300, adsFov: 50, rocket: true },
+  { id: 'bazooka', name: 'Bazuca M1A1', magSize: 1, reserve: 0, maxReserve: 8, rate: 0.8, auto: false, dmg: 0, spread: 0.01, adsSpread: 0.003, kick: 0.09, reload: 2.6, sound: 'bazooka', noise: 110, range: 300, adsFov: 50, rocket: true },
   { id: 'minigun', name: 'Minigun', magSize: 200, reserve: 0, maxReserve: 600, rate: 0.04, auto: true, dmg: 20, spread: 0.045, adsSpread: 0.03, kick: 0.006, reload: 4.2, sound: 'minigun', noise: 80, range: 180, adsFov: 62, spin: true, heavy: true },
 ];
 const HIP_FOV = 75;

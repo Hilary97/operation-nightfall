@@ -239,7 +239,14 @@ export class Tank {
   }
 }
 
-export function spawnTanks(defs) {
+// Kaserne armour: one guarding the west gate, one patrolling the yard, one in the shed
+const DEFS = [
+  { x: 192, z: 57, yaw: -Math.PI / 2 },
+  { x: 205, z: 42, yaw: Math.PI / 2, patrol: [[205, 42], [248, 42], [248, 48], [205, 48]] },
+  { x: 240, z: 64, yaw: Math.PI },
+];
+
+export function spawnTanks(defs = DEFS) {
   for (const d of defs) G.tanks.push(new Tank(d));
 }
 

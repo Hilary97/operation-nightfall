@@ -82,6 +82,30 @@ function itemModel(type) {
       g.add(gun);
       break;
     }
+    case 'bazooka': {
+      M.part(M.scaledBox(1.6, 0.5, 0.6, 1.2), new THREE.MeshStandardMaterial({ map: T.crate, roughness: 0.9 }), 0, 0.25, 0, g);
+      const od = M.mat('rocketbody', { color: 0x4b5030, roughness: 0.6, metalness: 0.3 });
+      M.part(M.cylZ(0.045, 1.4, 12), od, 0, 0.58, 0, g).rotation.y = Math.PI / 2;
+      break;
+    }
+    case 'minigun': {
+      M.part(M.scaledBox(1.2, 0.5, 0.7, 1.2), new THREE.MeshStandardMaterial({ map: T.crate, roughness: 0.9 }), 0, 0.25, 0, g);
+      const gun = new THREE.Group();
+      M.part(M.boxG(0.14, 0.13, 0.3), M.mat('vmdark', { color: 0x1c1d1f, roughness: 0.5, metalness: 0.7 }), 0, 0, 0.1, gun);
+      for (let i = 0; i < 6; i++) {
+        const a = (i / 6) * Math.PI * 2;
+        M.part(M.cylZ(0.01, 0.65, 6), steel, Math.cos(a) * 0.03, Math.sin(a) * 0.03, -0.35, gun);
+      }
+      gun.position.set(0, 0.6, 0);
+      gun.rotation.y = 0.6;
+      g.add(gun);
+      break;
+    }
+    case 'rockets': {
+      M.part(M.boxG(0.7, 0.25, 0.4), M.mat('ammobox', { color: 0x4a4c30, roughness: 0.7, metalness: 0.3 }), 0, 0.12, 0, g);
+      for (const x of [-0.12, 0, 0.12]) M.part(M.cylZ(0.03, 0.5, 8), M.mat('rocketbody', { color: 0x4b5030, roughness: 0.6, metalness: 0.3 }), x, 0.29, 0, g);
+      break;
+    }
     case 'medkit':
       M.part(M.boxG(0.45, 0.22, 0.32), new THREE.MeshStandardMaterial({ map: T.medkit, roughness: 0.8 }), 0, 0.11, 0, g);
       break;
@@ -134,6 +158,23 @@ export function spawnItems() {
   for (const [x, z] of [[16, 47], [-50, -32], [WRECK.x + 2, WRECK.z + 8]]) {
     addItem('grenades', x, z, { auto: true, label: 'Granadas', onTake: () => { P().grenades = Math.min(6, P().grenades + 2); G.hud.killfeed('+2 granadas'); } });
   }
+  // Enemy barracks armoury
+  addItem('bazooka', 198.5, 62.5, {
+    label: 'Tomar la bazuca M1A1',
+    onTake: () => { P().giveWeapon(4, 4); G.hud.notice('BAZUCA M1A1', 'Lanzacohetes antitanque — tecla 5'); },
+  });
+  addItem('minigun', 240, 32.8, {
+    label: 'Tomar la minigun',
+    onTake: () => { P().giveWeapon(5, 400); G.hud.notice('MINIGUN', 'Mantén el disparo para que giren los cañones — tecla 6'); },
+  });
+  for (const [x, z] of [[196.5, 61], [236, 68.5], [252, 22]]) {
+    addItem('rockets', x, z, {
+      auto: true, label: 'Cohetes',
+      onTake: () => { const w = P().weapons[4]; w.reserve = Math.min(w.maxReserve, w.reserve + 3); G.hud.killfeed('+3 cohetes'); },
+    });
+  }
+  for (const [x, z] of [[222, 34], [190, 70]]) addItem('ammo', x, z, { auto: true, label: 'Munición', onTake: () => { P().addAmmo(0.5); G.hud.killfeed('Munición recogida'); } });
+  for (const [x, z] of [[218, 58], [250, 20]]) addItem('medkit', x, z, { auto: true, label: 'Botiquín', onTake: () => { P().heal(50); G.hud.killfeed('+50 de salud'); } });
   G.intel = addItem('intel', 33.6, -5.5, { y: 0.87, label: 'Tomar los documentos secretos', hidden: true, onTake: () => G.mission.takeIntel() });
 }
 
