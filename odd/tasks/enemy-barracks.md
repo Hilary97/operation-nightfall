@@ -14,8 +14,8 @@ Workers read until `## Log`.
 ## Tasks
 - T1 [S4, S7] Heavy weapons: bazooka + minigun (WDEF, viewmodels, rocket projectile, sounds, Digit5/6, HUD). Route: inline. Commit: bdc9b1b
 - T2 [S3] Tanks: model, turret AI, cannon shells, explosion-only damage, wreck. Route: inline. Commit: 41b5b25
-- T3 [S1, S2, S4, S6] Barracks world: layout, road, soldiers, tank placement, weapon pickups, Kübelwagen moved there. Route: inline. Commit: pending
-- T4 [S5, S6, S7] Motorcycle vehicle, mission flow, HUD vehicle name, help/README/debug spot. Route: inline. Commit: pending
+- T3 [S1, S2, S4] Barracks world: layout, roads, soldiers, tank placement, weapon pickups. Route: inline. Commit: 8b78e48
+- T4 [S5, S6, S7] Motorcycle vehicle, Kübelwagen moved to the barracks, mission flow, HUD vehicle name, help/README/debug spot. Route: inline. Commit: pending
 - T5 [all] Headless smoke run + independent verify (Risk: item 6). Route: verify. Commit: pending
 
 ## Log
@@ -25,3 +25,10 @@ Workers read until `## Log`.
 - L4 (evidence): The worker was unavailable ("Writer repository preparation was unavailable"), so T1 and T2 were done inline. Headless Brave runs the game loop at about 0.04 game seconds per real second, so the smoke tests step the updates by hand.
   - T1: 6 weapons and 6 viewmodels. The rocket flies 32 m and explodes. The minigun spin reaches 0.45, 0.91, then 1, fires only once spun up, and drops to 0 when released. No console errors.
   - T2: bullets leave a tank at 520 HP. A tank enters combat and fires a shell at 2.4 s, its turret error is 0 and the shell explodes. A tank's own shell does no damage to it. A grenade takes it to 482 HP, one rocket to 230 HP, and a second rocket destroys it. No console errors.
+- L5 (evidence): T3 smoke test.
+  - KASERNE_Y is 4.48 and the compound is flat (height range 0). The maximum slope per 2 m step is 0.19 on ROAD2 and 0.11 on ROAD3.
+  - There are 15 'kaserne' soldiers and 3 tanks at yard height, and none of them is stuck in a collider.
+  - The patrol tank drove 94 m in 60 s and completed its loop.
+  - The pickups gave bazooka 1/4 and minigun 200/400.
+  - Screenshots of the west gate and the yard looked right. No console errors.
+  - The Kübelwagen move is deferred to T4, together with the motorcycle, so every commit stays playable.
