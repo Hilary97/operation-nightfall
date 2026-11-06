@@ -14,6 +14,7 @@ import { Grid } from './collision.js';
 import { buildWorld, WAKE, BASE, H } from './world.js';
 import { spawnItems, spawnBarrels, spawnVehicles, updateEntities } from './entities.js';
 import { spawnEnemies, updateEnemies } from './enemies.js';
+import { updateTanks } from './tanks.js';
 import { mission } from './mission.js';
 import { Player } from './player.js';
 import { HUD } from './hud.js';
@@ -288,6 +289,7 @@ function loop(now) {
     const P = G.player;
     P.update(dt, t);
     updateEnemies(dt, t);
+    updateTanks(dt, t);
     updateEntities(dt, t);
     mission.update(dt);
     searchlightDetection();
@@ -303,6 +305,7 @@ function loop(now) {
   } else if (G.state === 'dead') {
     G.player.update(dt, t);
     updateEnemies(dt, t);
+    updateTanks(dt, t);
     G.world.update(dt, t, G.camera.position);
     G.fx.update(dt);
     G.tracers.update(dt);

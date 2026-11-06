@@ -254,6 +254,7 @@ export class Vehicle {
     for (const o of [1.3, 0, -1.3]) {
       if (overlapsCircle(x + fx * o, z + fz * o, 0.95, this.pos.y, 1.8)) return true;
     }
+    for (const tk of G.tanks) if (Math.hypot(tk.pos.x - x, tk.pos.z - z) < 4.2) return true;
     return false;
   }
 
