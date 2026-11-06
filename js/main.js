@@ -18,6 +18,7 @@ import { mission } from './mission.js';
 import { Player } from './player.js';
 import { HUD } from './hud.js';
 import { Intro } from './intro.js';
+import { loadSoldierAsset } from './soldiers.js';
 import { initTouch, updateTouch, enterFullscreen } from './touch.js';
 
 const $ = (id) => document.getElementById(id);
@@ -49,6 +50,9 @@ async function init() {
   G.fx = new Particles(G.scene, G.T, 900);
   G.tracers = new Tracers(G.scene);
   G.flash = new FlashPool(G.scene, 3);
+
+  setLoad(20, 'Reclutando soldados…');
+  await loadSoldierAsset();
 
   setLoad(30, 'Elevando el terreno y plantando el bosque…');
   await nextFrame();

@@ -78,19 +78,45 @@ export function setShadows(obj, cast = true, receive = true) {
   obj.traverse((o) => { if (o.isMesh) { o.castShadow = cast; o.receiveShadow = receive; } });
 }
 
-const PAL = {
+export const PAL = {
   axis: { coat: 0x585e4c, pants: 0x4b4f42, helmet: 0x484e42, gear: 0x2a221a, boots: 0x161310 },
   officer: { coat: 0x4c5048, pants: 0x2b2c28, helmet: 0x2d302b, gear: 0x231c15, boots: 0x0d0d0d },
   allied: { coat: 0x726a46, pants: 0x63603f, helmet: 0x4e5335, gear: 0x8c7b55, boots: 0x3b2a1b },
 };
 
 let STAHL = null, M1 = null;
-function helmets() {
-  if (STAHL) return;
+export function helmets() {
+  if (STAHL) return { STAHL, M1 };
   STAHL = new THREE.LatheGeometry(
     [[0.001, 0.16], [0.07, 0.155], [0.12, 0.13], [0.15, 0.085], [0.16, 0.035], [0.168, 0.0], [0.19, -0.045], [0.186, -0.055]].map(([x, y]) => new THREE.Vector2(x, y)), 18);
   M1 = new THREE.LatheGeometry(
     [[0.001, 0.15], [0.09, 0.14], [0.145, 0.09], [0.163, 0.02], [0.168, -0.02], [0.185, -0.03], [0.183, -0.04]].map(([x, y]) => new THREE.Vector2(x, y)), 18);
+  return { STAHL, M1 };
+}
+
+// Per-weapon enemy gun, barrel along +Z with the origin at the grip. `len` is the barrel tip distance.
+export function buildEnemyGun(weapon) {
+  const wood = mat('gunwood', { color: 0x5a3b22, roughness: 0.55 });
+  const steel = mat('gunsteel', { color: 0x23262b, roughness: 0.4, metalness: 0.8 });
+  const gun = new THREE.Group();
+  let len;
+  if (weapon === 'rifle') {
+    part(boxG(0.05, 0.08, 0.82), wood, 0, 0, 0.1, gun);
+    part(cylZ(0.013, 0.32, 6), steel, 0, 0.03, 0.62, gun);
+    part(boxG(0.03, 0.03, 0.06), steel, 0.03, 0.04, 0.0, gun);
+    len = 0.78;
+  } else if (weapon === 'smg') {
+    part(boxG(0.045, 0.07, 0.36), steel, 0, 0, 0.12, gun);
+    part(boxG(0.03, 0.2, 0.04), steel, 0, -0.13, 0.14, gun);
+    part(cylZ(0.014, 0.16, 6), steel, 0, 0.01, 0.37, gun);
+    part(boxG(0.015, 0.015, 0.25), steel, 0, 0.0, -0.15, gun);
+    len = 0.45;
+  } else {
+    part(boxG(0.03, 0.05, 0.16), steel, 0, 0, 0.08, gun);
+    part(boxG(0.03, 0.09, 0.04), steel, 0, -0.06, 0.01, gun);
+    len = 0.17;
+  }
+  return { gun, len };
 }
 
 export function createSoldier(faction = 'axis', weapon = 'rifle') {
@@ -103,7 +129,6 @@ export function createSoldier(faction = 'axis', weapon = 'rifle') {
   const boots = mat('boots-' + faction, { color: p.boots, roughness: 0.55 });
   const skin = mat('skin', { color: 0xc08a68, roughness: 0.8 });
   const dark = mat('eyes', { color: 0x111111 });
-  const wood = mat('gunwood', { color: 0x5a3b22, roughness: 0.55 });
   const steel = mat('gunsteel', { color: 0x23262b, roughness: 0.4, metalness: 0.8 });
 
   const root = new THREE.Group();
@@ -168,26 +193,9 @@ export function createSoldier(faction = 'axis', weapon = 'rifle') {
     arms.push({ S, E });
   }
 
-  const gun = new THREE.Group();
+  const { gun, len } = buildEnemyGun(weapon);
   gun.position.set(0.06, 0.34, 0.22);
   torso.add(gun);
-  let len;
-  if (weapon === 'rifle') {
-    part(boxG(0.05, 0.08, 0.82), wood, 0, 0, 0.1, gun);
-    part(cylZ(0.013, 0.32, 6), steel, 0, 0.03, 0.62, gun);
-    part(boxG(0.03, 0.03, 0.06), steel, 0.03, 0.04, 0.0, gun);
-    len = 0.78;
-  } else if (weapon === 'smg') {
-    part(boxG(0.045, 0.07, 0.36), steel, 0, 0, 0.12, gun);
-    part(boxG(0.03, 0.2, 0.04), steel, 0, -0.13, 0.14, gun);
-    part(cylZ(0.014, 0.16, 6), steel, 0, 0.01, 0.37, gun);
-    part(boxG(0.015, 0.015, 0.25), steel, 0, 0.0, -0.15, gun);
-    len = 0.45;
-  } else {
-    part(boxG(0.03, 0.05, 0.16), steel, 0, 0, 0.08, gun);
-    part(boxG(0.03, 0.09, 0.04), steel, 0, -0.06, 0.01, gun);
-    len = 0.17;
-  }
   const muzzle = new THREE.Object3D();
   muzzle.position.set(0, 0.03, len);
   gun.add(muzzle);
