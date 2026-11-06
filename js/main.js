@@ -4,6 +4,8 @@ import { RenderPass } from 'three/addons/postprocessing/RenderPass.js';
 import { UnrealBloomPass } from 'three/addons/postprocessing/UnrealBloomPass.js';
 import { OutputPass } from 'three/addons/postprocessing/OutputPass.js';
 import { ShaderPass } from 'three/addons/postprocessing/ShaderPass.js';
+import { GTAOPass } from 'three/addons/postprocessing/GTAOPass.js';
+import { SMAAPass } from 'three/addons/postprocessing/SMAAPass.js';
 import { G } from './state.js';
 import { createTextures } from './textures.js';
 import { AudioEngine } from './audio.js';
@@ -24,7 +26,8 @@ const setLoad = (p, txt) => { loadBar.style.width = p + '%'; $('load-text').text
 const nextFrame = () => new Promise((r) => requestAnimationFrame(() => setTimeout(r, 0)));
 
 async function init() {
-  const renderer = new THREE.WebGLRenderer({ antialias: true, powerPreference: 'high-performance' });
+  // MSAA is wasted behind the composer (it renders to offscreen targets); SMAA handles edges instead.
+  const renderer = new THREE.WebGLRenderer({ antialias: false, powerPreference: 'high-performance' });
   renderer.setPixelRatio(Math.min(devicePixelRatio, 1.5));
   renderer.setSize(innerWidth, innerHeight);
   renderer.shadowMap.enabled = true;
@@ -61,10 +64,22 @@ async function init() {
   setLoad(85, 'Compilando shaders…');
   await nextFrame();
 
-  // Post-processing chain: scene -> first-person weapon -> bloom -> tone map -> film look
+  // Image-based lighting so metal and wet surfaces have something to reflect.
+  const env = buildNightEnvironment(renderer);
+  G.scene.environment = env;
+  G.scene.environmentIntensity = 0.45;
+  G.player.vm.scene.environment = env;
+  G.player.vm.scene.environmentIntensity = 0.9;
+
+  // Post-processing chain: scene -> ambient occlusion -> first-person weapon -> bloom -> tone map -> AA -> film look
   const composer = new EffectComposer(renderer);
   const renderPass = new RenderPass(G.scene, G.camera);
   composer.addPass(renderPass);
+  const gtao = new HalfResGTAOPass(G.scene, G.camera, innerWidth, innerHeight);
+  gtao.updateGtaoMaterial({ radius: 2, distanceExponent: 1, thickness: 3, scale: 1.5, samples: 12 });
+  gtao.updatePdMaterial({ radius: 6, samples: 12 });
+  gtao.blendIntensity = 0.85;
+  composer.addPass(gtao);
   const vmPass = new RenderPass(G.player.vm.scene, G.player.vm.camera);
   vmPass.clear = false;
   vmPass.clearDepth = true;
@@ -73,12 +88,18 @@ async function init() {
   const bloom = new UnrealBloomPass(new THREE.Vector2(innerWidth, innerHeight), 0.55, 0.55, 0.85);
   composer.addPass(bloom);
   composer.addPass(new OutputPass());
+  const smaa = new SMAAPass(innerWidth, innerHeight);
+  composer.addPass(smaa);
   const post = new ShaderPass(FilmShader);
   composer.addPass(post);
   G.composer = composer;
   G.renderPass = renderPass;
   G.vmPass = vmPass;
   G.bloom = bloom;
+  G.gtao = gtao;
+  G.smaa = smaa;
+  smaa.enabled = G.settings.quality !== 'low';
+  G.aoWanted = G.settings.quality === 'high';
   G.post = post;
   post.uniforms.uRes.value.set(innerWidth, innerHeight);
 
@@ -114,6 +135,8 @@ function applyQuality() {
   const pr = G.touch ? { low: 1, medium: 1.25, high: 1.5 } : { low: 0.75, medium: 1, high: 1.5 };
   G.renderer.setPixelRatio(Math.min(devicePixelRatio, pr[q]));
   G.bloom.enabled = q !== 'low';
+  G.smaa.enabled = q !== 'low';
+  G.aoWanted = q === 'high';
   const size = q === 'high' ? 2048 : 1024;
   const sh = G.world.moon.shadow;
   if (sh.mapSize.x !== size) {
@@ -292,7 +315,55 @@ function loop(now) {
   I.mouse.dx = I.mouse.dy = 0;
   I.mouse.wheel = 0;
   I.mouse.clicked = false;
+  // AO is bound to the world scene; the intro swaps in its own scenes.
+  G.gtao.enabled = G.aoWanted && G.renderPass.scene === G.scene;
   G.composer.render(dt);
+}
+
+// Low-frequency night sky prefiltered into a PMREM: cool moonlit zenith, dark ground, a warm camp glow.
+function buildNightEnvironment(renderer) {
+  const s = new THREE.Scene();
+  const dome = new THREE.Mesh(new THREE.SphereGeometry(10, 32, 16), new THREE.ShaderMaterial({
+    side: THREE.BackSide,
+    vertexShader: 'varying vec3 vDir; void main(){ vDir = normalize(position); gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0); }',
+    fragmentShader: `varying vec3 vDir; void main(){ float h = vDir.y;
+      vec3 sky = mix(vec3(0.16, 0.2, 0.32), vec3(0.05, 0.07, 0.14), smoothstep(0.0, 0.8, h));
+      vec3 ground = vec3(0.035, 0.035, 0.03);
+      gl_FragColor = vec4(mix(ground, sky, smoothstep(-0.08, 0.04, h)), 1.0); }`,
+  }));
+  s.add(dome);
+  const glow = (color, dir, r) => {
+    const m = new THREE.Mesh(new THREE.SphereGeometry(r, 16, 8), new THREE.MeshBasicMaterial({ color }));
+    m.position.copy(dir).normalize().multiplyScalar(8);
+    s.add(m);
+  };
+  glow(new THREE.Color(0xb8caff).multiplyScalar(6), G.world.moonDir, 0.7);
+  glow(new THREE.Color(0xffa050).multiplyScalar(1.5), new THREE.Vector3(0.7, 0.05, 0.7), 1.6);
+  const pmrem = new THREE.PMREMGenerator(renderer);
+  const tex = pmrem.fromScene(s, 0.04).texture;
+  pmrem.dispose();
+  s.traverse((o) => { if (o.isMesh) { o.geometry.dispose(); o.material.dispose(); } });
+  return tex;
+}
+
+// GTAO at half resolution, skipping geometry a normal-override pass would render wrong
+// (billboards, alpha-tested foliage, transparent FX), and without re-rendering shadow maps.
+class HalfResGTAOPass extends GTAOPass {
+  setSize(w, h) { super.setSize(Math.max(1, w >> 1), Math.max(1, h >> 1)); }
+  render(renderer, writeBuffer, readBuffer, dt, mask) {
+    const autoShadow = renderer.shadowMap.autoUpdate;
+    renderer.shadowMap.autoUpdate = false;
+    super.render(renderer, writeBuffer, readBuffer, dt, mask);
+    renderer.shadowMap.autoUpdate = autoShadow;
+  }
+  overrideVisibility() {
+    const cache = this._visibilityCache;
+    this.scene.traverse((o) => {
+      cache.set(o, o.visible);
+      const m = o.material;
+      if (o.isPoints || o.isLine || o.isSprite || (m && !Array.isArray(m) && (m.transparent || m.alphaTest > 0 || m.isShaderMaterial || m.isMeshBasicMaterial))) o.visible = false;
+    });
+  }
 }
 
 // Being caught in a live searchlight beam alerts its tower guard.
