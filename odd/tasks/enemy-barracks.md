@@ -15,7 +15,7 @@ Workers read until `## Log`.
 - T1 [S4, S7] Heavy weapons: bazooka + minigun (WDEF, viewmodels, rocket projectile, sounds, Digit5/6, HUD). Route: inline. Commit: bdc9b1b
 - T2 [S3] Tanks: model, turret AI, cannon shells, explosion-only damage, wreck. Route: inline. Commit: 41b5b25
 - T3 [S1, S2, S4] Barracks world: layout, roads, soldiers, tank placement, weapon pickups. Route: inline. Commit: 8b78e48
-- T4 [S5, S6, S7] Motorcycle vehicle, Kübelwagen moved to the barracks, mission flow, HUD vehicle name, help/README/debug spot. Route: inline. Commit: pending
+- T4 [S5, S6, S7] Motorcycle vehicle, Kübelwagen moved to the barracks, mission flow, HUD vehicle name, help/README/debug spot. Route: inline. Commit: a711e2b
 - T5 [all] Headless smoke run + independent verify (Risk: item 6). Route: verify. Commit: pending
 
 ## Log
@@ -32,3 +32,10 @@ Workers read until `## Log`.
   - The pickups gave bazooka 1/4 and minigun 200/400.
   - Screenshots of the west gate and the yard looked right. No console errors.
   - The Kübelwagen move is deferred to T4, together with the motorcycle, so every commit stays playable.
+- L6 (evidence): T4 flow smoke test with `?debug=ride`.
+  - Vehicles: the moto is at (40,40) and the Kübelwagen at (225,66).
+  - The prompt reads "[E] Conducir la moto con sidecar". The moto reaches a top speed of 27, and the HUD shows "BMW R75".
+  - At the barracks the phase goes ride → kaserne. Destroying the 3 tanks moves it to return, with the flares on.
+  - The prompt reads "[E] Conducir el Kübelwagen". Reaching Allied HQ ends the mission (done/victory).
+  - Screenshots of the moto in the motor pool and the Kübelwagen at the south gate looked right. No console errors.
+  - The debug ride spot was moved to (38,42.2) because the moto was out of the 3.4 m interact reach.
